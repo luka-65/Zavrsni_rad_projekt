@@ -1,0 +1,232 @@
+<div class="container">
+  <h1>Crypto Trading Simulator</h1>
+
+  <div class="form">
+    <label>Pretraži kriptovalutu</label>
+
+<input
+  type="text"
+  [(ngModel)]="symbolSearch"
+  (input)="searchSymbols()"
+  placeholder="npr. BTC, ETH, SOL"
+/>
+
+@if (symbolResults.length > 0) {
+  <div class="symbol-results">
+    @for (item of symbolResults; track item.symbol) {
+      <div
+  class="symbol-item"
+  (click)="selectSymbol(item.symbol)"
+>
+  <strong>{{ item.base_asset }}</strong>
+  <span>{{ item.symbol }}</span>
+</div>
+    }
+  </div>
+}
+
+    <label>Strategija</label>
+    <select [(ngModel)]="strategy">
+      <option value="moving-average">Moving Average</option>
+      <option value="rsi">RSI</option>
+      <option value="bollinger">Bollinger Bands</option>
+    </select>
+
+    <label>Interval</label>
+<select [(ngModel)]="interval">
+  <option value="1h">1h</option>
+  <option value="4h">4h</option>
+  <option value="1d">1d</option>
+  <option value="1w">1w</option>
+</select>
+
+    <label>Početni kapital</label>
+    <input type="number" [(ngModel)]="initialBalance">
+  </div>
+
+  <button (click)="runBacktest()">Pokreni simulaciju</button>
+   <button (click)="compareStrategies()">
+  Usporedi strategije
+</button>
+
+  @if (result) {
+  <button (click)="downloadPdf()">
+    Preuzmi PDF izvještaj
+  </button>
+
+ 
+}
+
+  @if (result) {
+    <div class="cards">
+      <div class="card">
+        <h3>Strategija</h3>
+        <p>{{ result.strategy }}</p>
+      </div>
+
+      <div class="card">
+        <h3>Simbol</h3>
+        <p>{{ result.symbol }}</p>
+      </div>
+
+      <div class="card">
+        <h3>Ukupni povrat</h3>
+        <p
+  [style.color]="result.result.return_pct >= 0 ? '#22c55e' : '#ef4444'"
+>
+  {{ result.result.return_pct }}%
+</p>
+      </div>
+
+      <div class="card">
+        <h3>Završni kapital</h3>
+        <p>{{ result.result.final_balance }} USDT</p>
+      </div>
+
+      <div class="card">
+        <h3>Max Drawdown</h3>
+        <p>{{ result.result.max_drawdown_pct }}%</p>
+      </div>
+
+      <div class="card">
+        <h3>Win Rate</h3>
+        <p
+  [style.color]="result.result.win_rate_pct >= 50 ? '#22c55e' : '#f59e0b'"
+>
+  {{ result.result.win_rate_pct }}%
+</p>
+      </div>
+    </div>
+  }
+</div>
+
+@if (result && result.result.trades.length > 0) {
+  <h2>Popis transakcija</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Tip</th>
+        <th>Cijena</th>
+        <th>Profit %</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      @for (trade of result.result.trades; track $index) {
+        <tr>
+          <td>{{ trade.type }}</td>
+          <td>{{ trade.price }}</td>
+          <td>{{ trade.profit_pct ?? '-' }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}
+
+@if (compareResults.length > 0) {
+  <h2>Usporedba strategija</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Strategija</th>
+        <th>ROI</th>
+        <th>Završni kapital</th>
+        <th>Max Drawdown</th>
+        <th>Win Rate</th>
+        <th>Broj transakcija</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      @for (item of compareResults; track item.strategy) {
+        <tr>
+          <td>{{ item.strategy }}</td>
+          <td [style.color]="item.return_pct >= 0 ? '#22c55e' : '#ef4444'">
+            {{ item.return_pct }}%
+          </td>
+          <td>{{ item.final_balance }} USDT</td>
+          <td>{{ item.max_drawdown_pct }}%</td>
+          <td>{{ item.win_rate_pct }}%</td>
+          <td>{{ item.number_of_trades }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+    <h2>Grafička usporedba ROI-a</h2>
+  
+<canvas id="compareChart"></canvas>
+}
+
+@if (bestStrategy) {
+  <div class="best-card">
+    <h2>🏆 Najbolja strategija</h2>
+    <p>{{ bestStrategy.strategy }}</p>
+    <span [style.color]="bestStrategy.return_pct >= 0 ? '#22c55e' : '#ef4444'">
+      ROI: {{ bestStrategy.return_pct }}%
+    </span>
+  </div>
+}
+
+@if (
+  (
+    strategy === 'moving-average' ||
+    strategy === 'rsi' ||
+    strategy === 'bollinger'
+  ) && result
+) {
+  <h2>
+    @if (strategy === 'moving-average') {
+      Graf cijene i pomičnih prosjeka
+    }
+
+    @if (strategy === 'rsi') {
+      RSI indikator
+    }
+
+    @if (strategy === 'bollinger') {
+  Bollinger Bands
+}
+  </h2>
+
+  <canvas id="priceChart"></canvas>
+}
+
+@if (simulations.length > 0) {
+  <h2>Povijest simulacija</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Datum</th>
+        <th>Strategija</th>
+        <th>Simbol</th>
+        <th>Interval</th>
+        <th>Početni kapital</th>
+        <th>Završni kapital</th>
+        <th>ROI</th>
+        <th>Win Rate</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      @for (simulation of simulations; track simulation.id) {
+        <tr>
+          <td>{{ simulation.created_at }}</td>
+          <td>{{ simulation.strategy }}</td>
+          <td>{{ simulation.symbol }}</td>
+          <td>{{ simulation.interval }}</td>
+          <td>{{ simulation.initial_balance }}</td>
+          <td>{{ simulation.final_balance }}</td>
+          <td
+  [style.color]="simulation.return_pct >= 0 ? '#22c55e' : '#ef4444'"
+>
+  {{ simulation.return_pct }}%
+</td>
+          <td>{{ simulation.win_rate_pct }}%</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}

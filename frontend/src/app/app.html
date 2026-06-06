@@ -32,7 +32,7 @@
       <option value="bollinger">Bollinger Bands</option>
     </select>
 
-    <label>Interval</label>
+   <label>Interval</label>
 <select [(ngModel)]="interval">
   <option value="1h">1h</option>
   <option value="4h">4h</option>
@@ -40,9 +40,35 @@
   <option value="1w">1w</option>
 </select>
 
-    <label>Početni kapital</label>
-    <input type="number" [(ngModel)]="initialBalance">
-  </div>
+@if (strategy === 'moving-average') {
+  <label>Kratki pomični prosjek</label>
+  <input type="number" [(ngModel)]="shortWindow">
+
+  <label>Dugi pomični prosjek</label>
+  <input type="number" [(ngModel)]="longWindow">
+}
+
+@if (strategy === 'rsi') {
+  <label>RSI period</label>
+  <input type="number" [(ngModel)]="rsiPeriod">
+
+  <label>Oversold granica</label>
+  <input type="number" [(ngModel)]="oversold">
+
+  <label>Overbought granica</label>
+  <input type="number" [(ngModel)]="overbought">
+}
+
+@if (strategy === 'bollinger') {
+  <label>Bollinger period</label>
+  <input type="number" [(ngModel)]="bollingerWindow">
+
+  <label>Standardna devijacija</label>
+  <input type="number" [(ngModel)]="numStd">
+}
+
+<label>Početni kapital</label>
+<input type="number" [(ngModel)]="initialBalance">
 
   <button (click)="runBacktest()">Pokreni simulaciju</button>
    <button (click)="compareStrategies()">

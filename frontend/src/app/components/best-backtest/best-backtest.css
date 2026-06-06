@@ -1,0 +1,49 @@
+.best-backtest-card {
+  margin-bottom: 30px;
+  padding: 25px;
+  border-radius: 16px;
+
+  background: linear-gradient(
+    135deg,
+    #0f766e,
+    #1e293b
+  );
+
+  border: 1px solid #14b8a6;
+
+  box-shadow: 0 0 25px rgba(
+    20,
+    184,
+    166,
+    0.25
+  );
+}
+
+.header {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.content {
+  display: flex;
+  gap: 50px;
+  flex-wrap: wrap;
+}
+
+.content span {
+  color: #cbd5e1;
+  font-size: 14px;
+}
+
+.content h2 {
+  color: #22c55e;
+  margin: 5px 0;
+}
+
+.content h3,
+.content h4 {
+  color: white;
+  margin: 5px 0;
+}

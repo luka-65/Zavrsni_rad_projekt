@@ -1,0 +1,72 @@
+h2 {
+  color: #f8fafc;
+  margin-top: 40px;
+}
+
+table {
+  width: 900px;
+  border-collapse: collapse;
+  margin-top: 15px;
+  margin-bottom: 30px;
+  background: #1e293b;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+th {
+  background: #334155;
+  color: white;
+}
+
+td,
+th {
+  padding: 12px;
+  border: 1px solid #475569;
+}
+
+tr:hover {
+  background: #293548;
+}
+
+canvas {
+  display: block;
+  width: 1000px !important;
+  height: 420px !important;
+  margin: 20px auto 40px auto;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 20px;
+}
+
+#compareChart {
+  width: 1000px !important;
+  max-height: 400px;
+  margin-top: 20px;
+}
+
+.best-card {
+  background: linear-gradient(135deg, #1e293b, #0f766e);
+  border: 1px solid #14b8a6;
+  border-radius: 14px;
+  padding: 22px;
+  margin-top: 25px;
+  max-width: 420px;
+  box-shadow: 0 0 20px rgba(20, 184, 166, 0.25);
+}
+
+.best-card h2 {
+  margin-top: 0;
+  color: white;
+}
+
+.best-card p {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.best-card span {
+  font-size: 20px;
+  font-weight: bold;
+}

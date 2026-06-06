@@ -1,12 +1,30 @@
 import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Chart } from 'chart.js/auto';
-import jsPDF from 'jspdf';
+
+import { BacktestService } from './services/backtest.service';
+import { ChartDataService } from './services/chart.service';
+import { SimulationService } from './services/simulation.service';
+import { SymbolService } from './services/symbol.service';
+import { PdfService } from './services/pdf.service';
+import { ResultCardsComponent } from './components/result-cards/result-cards';
+import { TradeHistoryComponent } from './components/trade-history/trade-history';
+import { StrategyComparisonComponent } from './components/strategy-comparison/strategy-comparison';
+import { StrategyChartComponent } from './components/strategy-chart/strategy-chart';
+import { SimulationHistoryComponent } from './components/simulation-history/simulation-history';
+import { SimulationFormComponent } from './components/simulation-form/simulation-form';
+import { DashboardStatsComponent } from './components/dashboard-stats/dashboard-stats';
+import { BestBacktestComponent } from './components/best-backtest/best-backtest';
+
 
 @Component({
   selector: 'app-root',
-  imports: [FormsModule],
+  imports: [FormsModule, FormsModule,
+  ResultCardsComponent,
+  TradeHistoryComponent, StrategyComparisonComponent,
+StrategyChartComponent,
+SimulationHistoryComponent, SimulationFormComponent,DashboardStatsComponent,
+BestBacktestComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -18,6 +36,8 @@ export class App implements OnInit {
   compareResults: any[] = [];
   compareChart: any = null;
   bestStrategy: any = null;
+  dashboardStats: any = null;
+  bestBacktest: any = null;
 
   symbolSearch = '';
   symbolResults: any[] = [];
@@ -26,6 +46,8 @@ export class App implements OnInit {
   strategy = 'moving-average';
   interval = '1d';
   initialBalance = 10000;
+
+  activeTab = 'simulation';
 
   shortWindow = 20;
   longWindow = 50;
@@ -37,54 +59,79 @@ export class App implements OnInit {
   bollingerWindow = 20;
   numStd = 2;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private backtestService: BacktestService,
+    private chartDataService: ChartDataService,
+    private simulationService: SimulationService,
+    private symbolService: SymbolService,
+    private pdfService: PdfService
+  ) {}
 
   ngOnInit() {
     this.loadSimulations();
+    this.loadDashboardStats();
+    this.loadBestBacktest();
+  }
+
+  getStrategyEndpoint() {
+    if (this.strategy === 'rsi') {
+      return 'rsi';
+    }
+
+    if (this.strategy === 'bollinger') {
+      return 'bollinger';
+    }
+
+    return 'moving-average';
+  }
+
+  getStrategyParams() {
+    if (this.strategy === 'moving-average') {
+      return `&short_window=${this.shortWindow}&long_window=${this.longWindow}`;
+    }
+
+    if (this.strategy === 'rsi') {
+      return `&period=${this.rsiPeriod}&oversold=${this.oversold}&overbought=${this.overbought}`;
+    }
+
+    if (this.strategy === 'bollinger') {
+      return `&window=${this.bollingerWindow}&num_std=${this.numStd}`;
+    }
+
+    return '';
   }
 
   runBacktest() {
-    let endpoint = 'moving-average';
+    const endpoint = this.getStrategyEndpoint();
+    const params = this.getStrategyParams();
 
-    if (this.strategy === 'rsi') {
-      endpoint = 'rsi';
-    }
+    this.backtestService
+      .runBacktest(
+        endpoint,
+        this.symbol,
+        this.interval,
+        this.initialBalance,
+        params
+      )
+      .subscribe((data) => {
+        this.result = data;
+        this.activeTab = 'results';
+        this.loadSimulations();
+        this.loadDashboardStats();
+        this.loadBestBacktest();
 
-    if (this.strategy === 'bollinger') {
-      endpoint = 'bollinger';
-    }
-
-    let url = `http://127.0.0.1:5000/api/backtest/${endpoint}?symbol=${this.symbol}&interval=${this.interval}&initial_balance=${this.initialBalance}`;
-
-    if (this.strategy === 'moving-average') {
-      url += `&short_window=${this.shortWindow}&long_window=${this.longWindow}`;
-    }
-
-    if (this.strategy === 'rsi') {
-      url += `&period=${this.rsiPeriod}&oversold=${this.oversold}&overbought=${this.overbought}`;
-    }
-
-    if (this.strategy === 'bollinger') {
-      url += `&window=${this.bollingerWindow}&num_std=${this.numStd}`;
-    }
-
-    this.http.get(url).subscribe((data) => {
-      this.result = data;
-      this.loadSimulations();
-
-      setTimeout(() => {
-        this.loadChart();
-      }, 300);
-    });
+        setTimeout(() => {
+          this.loadChart();
+        }, 300);
+      });
   }
 
   compareStrategies() {
-    this.http
-      .get<any>(
-        `http://127.0.0.1:5000/api/backtest/compare?symbol=${this.symbol}&interval=${this.interval}&initial_balance=${this.initialBalance}`
-      )
+    this.backtestService
+      .compareStrategies(this.symbol, this.interval, this.initialBalance)
       .subscribe((response) => {
         this.compareResults = response.results;
+        this.activeTab = 'compare';
 
         this.bestStrategy = this.compareResults.reduce((best, current) =>
           current.return_pct > best.return_pct ? current : best
@@ -121,161 +168,105 @@ export class App implements OnInit {
     });
   }
 
+  loadBestBacktest() {
+  this.simulationService
+    .getBestBacktest()
+    .subscribe((response) => {
+      this.bestBacktest = response.data;
+    });
+}
+
+  loadDashboardStats() {
+  this.simulationService
+    .getDashboardStats()
+    .subscribe((response) => {
+      this.dashboardStats = response.data;
+    });
+}
+
   loadSimulations() {
-    this.http
-      .get<any>('http://127.0.0.1:5000/api/simulations')
-      .subscribe((response) => {
-        this.simulations = response.data;
-      });
+    this.simulationService.getSimulations().subscribe((response) => {
+      this.simulations = response.data;
+    });
   }
 
   loadChart() {
-    let chartEndpoint = 'moving-average';
+    const endpoint = this.getStrategyEndpoint();
+    const params = this.getStrategyParams();
 
-    if (this.strategy === 'rsi') {
-      chartEndpoint = 'rsi';
-    }
+    this.chartDataService
+      .getChartData(endpoint, this.symbol, this.interval, params)
+      .subscribe((chartData) => {
+        const canvas = document.getElementById('priceChart') as HTMLCanvasElement | null;
 
-    if (this.strategy === 'bollinger') {
-      chartEndpoint = 'bollinger';
-    }
+        if (!canvas) {
+          return;
+        }
 
-    let chartUrl = `http://127.0.0.1:5000/api/chart/${chartEndpoint}?symbol=${this.symbol}&interval=${this.interval}`;
+        if (this.chart) {
+          this.chart.destroy();
+        }
 
-    if (this.strategy === 'moving-average') {
-      chartUrl += `&short_window=${this.shortWindow}&long_window=${this.longWindow}`;
-    }
+        if (this.strategy === 'moving-average') {
+          this.chart = new Chart(canvas, {
+            type: 'line',
+            data: {
+              labels: chartData.prices.map((_: any, i: number) => i + 1),
+              datasets: [
+                { label: 'Cijena', data: chartData.prices },
+                { label: 'MA Short', data: chartData.ma_short },
+                { label: 'MA Long', data: chartData.ma_long }
+              ]
+             },
+            options: {
+              responsive: false,
+              maintainAspectRatio: false
+            }
+          });
+        }
 
-    if (this.strategy === 'rsi') {
-      chartUrl += `&period=${this.rsiPeriod}&oversold=${this.oversold}&overbought=${this.overbought}`;
-    }
+        if (this.strategy === 'rsi') {
+          this.chart = new Chart(canvas, {
+            type: 'line',
+            data: {
+              labels: chartData.rsi.map((_: any, i: number) => i + 1),
+              datasets: [
+                { label: 'RSI', data: chartData.rsi },
+                { label: 'Oversold', data: chartData.oversold },
+                { label: 'Overbought', data: chartData.overbought }
+              ]
+             },
+            options: {
+              responsive: false,
+              maintainAspectRatio: false
+            }
+          });
+        }
 
-    if (this.strategy === 'bollinger') {
-      chartUrl += `&window=${this.bollingerWindow}&num_std=${this.numStd}`;
-    }
-
-    this.http.get<any>(chartUrl).subscribe((chartData) => {
-      const canvas = document.getElementById('priceChart') as HTMLCanvasElement | null;
-
-      if (!canvas) {
-        return;
-      }
-
-      if (this.chart) {
-        this.chart.destroy();
-      }
-
-      if (this.strategy === 'moving-average') {
-        this.chart = new Chart(canvas, {
-          type: 'line',
-          data: {
-            labels: chartData.prices.map((_: any, i: number) => i + 1),
-            datasets: [
-              { label: 'Cijena', data: chartData.prices },
-              { label: 'MA Short', data: chartData.ma_short },
-              { label: 'MA Long', data: chartData.ma_long }
-            ]
-          }
-        });
-      }
-
-      if (this.strategy === 'rsi') {
-        this.chart = new Chart(canvas, {
-          type: 'line',
-          data: {
-            labels: chartData.rsi.map((_: any, i: number) => i + 1),
-            datasets: [
-              { label: 'RSI', data: chartData.rsi },
-              { label: 'Oversold (30)', data: chartData.oversold },
-              { label: 'Overbought (70)', data: chartData.overbought }
-            ]
-          }
-        });
-      }
-
-      if (this.strategy === 'bollinger') {
-        this.chart = new Chart(canvas, {
-          type: 'line',
-          data: {
-            labels: chartData.prices.map((_: any, i: number) => i + 1),
-            datasets: [
-              { label: 'Cijena', data: chartData.prices },
-              { label: 'Upper Band', data: chartData.upper_band },
-              { label: 'Middle Band', data: chartData.middle_band },
-              { label: 'Lower Band', data: chartData.lower_band }
-            ]
-          }
-        });
-      }
-    });
+        if (this.strategy === 'bollinger') {
+          this.chart = new Chart(canvas, {
+            type: 'line',
+            data: {
+              labels: chartData.prices.map((_: any, i: number) => i + 1),
+              datasets: [
+                { label: 'Cijena', data: chartData.prices },
+                { label: 'Upper Band', data: chartData.upper_band },
+                { label: 'Middle Band', data: chartData.middle_band },
+                { label: 'Lower Band', data: chartData.lower_band }
+              ]
+             },
+            options: {
+              responsive: false,
+              maintainAspectRatio: false
+            }
+          });
+        }
+      });
   }
 
+
   downloadPdf() {
-    if (!this.result) {
-      return;
-    }
-
-    const doc = new jsPDF();
-    const today = new Date().toLocaleString('hr-HR');
-
-    doc.setFillColor(15, 23, 42);
-    doc.rect(0, 0, 210, 28, 'F');
-
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(18);
-    doc.text('Crypto Trading Simulator', 10, 12);
-
-    doc.setFontSize(11);
-    doc.text('Izvještaj simulacije trgovanja kriptovalutama', 10, 20);
-
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(12);
-
-    doc.text(`Datum izrade: ${today}`, 10, 40);
-    doc.text(`Strategija: ${this.result.strategy}`, 10, 52);
-    doc.text(`Simbol: ${this.result.symbol}`, 10, 64);
-    doc.text(`Interval: ${this.result.interval}`, 10, 76);
-
-    doc.setFontSize(14);
-    doc.text('Rezultati simulacije', 10, 95);
-
-    doc.setFontSize(12);
-
-    const rows = [
-      ['Pocetni kapital', `${this.result.result.initial_balance} USDT`],
-      ['Zavrsni kapital', `${this.result.result.final_balance} USDT`],
-      ['Ukupni povrat', `${this.result.result.return_pct}%`],
-      ['Max Drawdown', `${this.result.result.max_drawdown_pct}%`],
-      ['Win Rate', `${this.result.result.win_rate_pct}%`],
-      ['Broj transakcija', `${this.result.result.number_of_trades}`]
-    ];
-
-    let y = 108;
-
-    rows.forEach((row) => {
-      doc.setFillColor(241, 245, 249);
-      doc.rect(10, y - 7, 90, 10, 'F');
-
-      doc.setFillColor(226, 232, 240);
-      doc.rect(100, y - 7, 90, 10, 'F');
-
-      doc.text(row[0], 13, y);
-      doc.text(row[1], 103, y);
-
-      y += 12;
-    });
-
-    doc.setFontSize(10);
-    doc.setTextColor(90, 90, 90);
-    doc.text(
-      'Napomena: Rezultati predstavljaju simulacijsko testiranje nad povijesnim podacima i ne predstavljaju financijski savjet.',
-      10,
-      190,
-      { maxWidth: 185 }
-    );
-
-    const fileName = `izvjestaj_${this.result.symbol}_${this.strategy}.pdf`;
-    doc.save(fileName);
+    this.pdfService.downloadSimulationPdf(this.result, this.strategy);
   }
 
   searchSymbols() {
@@ -284,13 +275,9 @@ export class App implements OnInit {
       return;
     }
 
-    this.http
-      .get<any>(
-        `http://127.0.0.1:5000/api/symbols/search?query=${this.symbolSearch}`
-      )
-      .subscribe((response) => {
-        this.symbolResults = response.data;
-      });
+    this.symbolService.searchSymbols(this.symbolSearch).subscribe((response) => {
+      this.symbolResults = response.data;
+    });
   }
 
   selectSymbol(symbol: string) {
@@ -298,4 +285,51 @@ export class App implements OnInit {
     this.symbolSearch = symbol;
     this.symbolResults = [];
   }
+
+  loadSimulationDetails(id: number) {
+  this.simulationService
+    .getSimulationById(id)
+    .subscribe((response) => {
+      const simulation = response.data;
+
+      if (!simulation.result) {
+        alert('Detalji nisu dostupni za ovu stariju simulaciju.');
+        return;
+      }
+
+      this.result = {
+        status: 'success',
+        strategy: simulation.strategy,
+        symbol: simulation.symbol,
+        interval: simulation.interval,
+        result: simulation.result
+      };
+    
+      this.symbol = simulation.symbol;
+      this.interval = simulation.interval;
+      this.strategy = this.mapStrategyToFrontend(simulation.strategy);
+
+      this.activeTab = 'results';
+
+      setTimeout(() => {
+        this.loadChart();
+      }, 600);
+    });
+}
+
+mapStrategyToFrontend(strategyName: string): string {
+  if (strategyName === 'Moving Average Crossover') {
+    return 'moving-average';
+  }
+
+  if (strategyName === 'Relative Strength Index') {
+    return 'rsi';
+  }
+
+  if (strategyName === 'Bollinger Bands') {
+    return 'bollinger';
+  }
+
+  return 'moving-average';
+}
 }

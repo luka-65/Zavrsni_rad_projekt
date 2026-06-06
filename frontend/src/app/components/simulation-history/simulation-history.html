@@ -1,0 +1,41 @@
+@if (simulations.length > 0) {
+  <h2>Povijest simulacija</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Datum</th>
+        <th>Strategija</th>
+        <th>Simbol</th>
+        <th>Interval</th>
+        <th>Početni kapital</th>
+        <th>Završni kapital</th>
+        <th>ROI</th>
+        <th>Win Rate</th>
+        <th>Akcija</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      @for (simulation of simulations; track simulation.id) {
+        <tr>
+  <td>{{ simulation.created_at }}</td>
+  <td>{{ simulation.strategy }}</td>
+  <td>{{ simulation.symbol }}</td>
+  <td>{{ simulation.interval }}</td>
+  <td>{{ simulation.initial_balance }}</td>
+  <td>{{ simulation.final_balance }}</td>
+  <td [style.color]="simulation.return_pct >= 0 ? '#22c55e' : '#ef4444'">
+    {{ simulation.return_pct }}%
+  </td>
+  <td>{{ simulation.win_rate_pct }}%</td>
+  <td>
+    <button (click)="selectSimulationEvent.emit(simulation.id)">
+      Detalji
+    </button>
+  </td>
+</tr>
+      }
+    </tbody>
+  </table>
+}

@@ -1,0 +1,23 @@
+@if (result && result.result.trades.length > 0) {
+  <h2>Popis transakcija</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Tip</th>
+        <th>Cijena</th>
+        <th>Profit %</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      @for (trade of result.result.trades; track $index) {
+        <tr>
+          <td>{{ trade.type }}</td>
+          <td>{{ trade.price }}</td>
+          <td>{{ trade.profit_pct ?? '-' }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}

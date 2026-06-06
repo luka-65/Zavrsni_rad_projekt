@@ -1,0 +1,23 @@
+@if (
+  (
+    strategy === 'moving-average' ||
+    strategy === 'rsi' ||
+    strategy === 'bollinger'
+  ) && result
+) {
+  <h2>
+    @if (strategy === 'moving-average') {
+      Graf cijene i pomičnih prosjeka
+    }
+
+    @if (strategy === 'rsi') {
+      RSI indikator
+    }
+
+    @if (strategy === 'bollinger') {
+      Bollinger Bands
+    }
+  </h2>
+
+  <canvas id="priceChart"></canvas>
+}

@@ -1,0 +1,39 @@
+@if (bestBacktest) {
+
+<div class="best-backtest-card">
+
+  <div class="header">
+    🏆 Najbolji Backtest
+  </div>
+
+  <div class="content">
+
+    <div>
+      <span>Strategija</span>
+      <h3>{{ bestBacktest.strategy }}</h3>
+    </div>
+
+    <div>
+      <span>Simbol</span>
+      <h3>{{ bestBacktest.symbol }}</h3>
+    </div>
+
+    <div>
+      <span>ROI</span>
+      <h2>
+        {{ bestBacktest.return_pct }}%
+      </h2>
+    </div>
+
+    <div>
+      <span>Datum</span>
+      <h4>
+        {{ bestBacktest.created_at }}
+      </h4>
+    </div>
+
+  </div>
+
+</div>
+
+}

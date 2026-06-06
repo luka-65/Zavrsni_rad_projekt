@@ -1,0 +1,29 @@
+h2 {
+  color: #f8fafc;
+  margin-top: 40px;
+}
+
+table {
+  width: 900px;
+  border-collapse: collapse;
+  margin-top: 15px;
+  margin-bottom: 30px;
+  background: #1e293b;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+th {
+  background: #334155;
+  color: white;
+}
+
+td,
+th {
+  padding: 12px;
+  border: 1px solid #475569;
+}
+
+tr:hover {
+  background: #293548;
+}

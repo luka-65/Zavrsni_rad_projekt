@@ -1,0 +1,122 @@
+<div class="form">
+  <label>Pretraži kriptovalutu</label>
+
+  <input
+    type="text"
+    [ngModel]="symbolSearch"
+    (ngModelChange)="symbolSearchChange.emit($event); searchSymbolsEvent.emit()"
+    placeholder="npr. BTC, ETH, SOL"
+  />
+
+  @if (symbolResults.length > 0) {
+    <div class="symbol-results">
+      @for (item of symbolResults; track item.symbol) {
+        <div
+          class="symbol-item"
+          (click)="selectSymbolEvent.emit(item.symbol)"
+        >
+          <strong>{{ item.base_asset }}</strong>
+          <span>{{ item.symbol }}</span>
+        </div>
+      }
+    </div>
+  }
+
+  <label>Strategija</label>
+  <select
+    [ngModel]="strategy"
+    (ngModelChange)="strategyChange.emit($event)"
+  >
+    <option value="moving-average">Moving Average</option>
+    <option value="rsi">RSI</option>
+    <option value="bollinger">Bollinger Bands</option>
+  </select>
+
+  <label>Interval</label>
+  <select
+    [ngModel]="interval"
+    (ngModelChange)="intervalChange.emit($event)"
+  >
+    <option value="1h">1 sat</option>
+    <option value="4h">4 sata</option>
+    <option value="1d">1 dan</option>
+    <option value="1w">1 tjedan</option>
+    <option value="1M">1 mjesec</option>
+  </select>
+
+  @if (strategy === 'moving-average') {
+    <label>Kratki pomični prosjek</label>
+    <input
+      type="number"
+      [ngModel]="shortWindow"
+      (ngModelChange)="shortWindowChange.emit($event)"
+    >
+
+    <label>Dugi pomični prosjek</label>
+    <input
+      type="number"
+      [ngModel]="longWindow"
+      (ngModelChange)="longWindowChange.emit($event)"
+    >
+  }
+
+  @if (strategy === 'rsi') {
+    <label>RSI period</label>
+    <input
+      type="number"
+      [ngModel]="rsiPeriod"
+      (ngModelChange)="rsiPeriodChange.emit($event)"
+    >
+
+    <label>Oversold granica</label>
+    <input
+      type="number"
+      [ngModel]="oversold"
+      (ngModelChange)="oversoldChange.emit($event)"
+    >
+
+    <label>Overbought granica</label>
+    <input
+      type="number"
+      [ngModel]="overbought"
+      (ngModelChange)="overboughtChange.emit($event)"
+    >
+  }
+
+  @if (strategy === 'bollinger') {
+    <label>Bollinger period</label>
+    <input
+      type="number"
+      [ngModel]="bollingerWindow"
+      (ngModelChange)="bollingerWindowChange.emit($event)"
+    >
+
+    <label>Standardna devijacija</label>
+    <input
+      type="number"
+      [ngModel]="numStd"
+      (ngModelChange)="numStdChange.emit($event)"
+    >
+  }
+
+  <label>Početni kapital</label>
+  <input
+    type="number"
+    [ngModel]="initialBalance"
+    (ngModelChange)="initialBalanceChange.emit($event)"
+  >
+
+  <button (click)="runBacktestEvent.emit()">
+    Pokreni simulaciju
+  </button>
+
+  <button (click)="compareStrategiesEvent.emit()">
+    Usporedi strategije
+  </button>
+
+  @if (hasResult) {
+    <button (click)="downloadPdfEvent.emit()">
+      Preuzmi PDF izvještaj
+    </button>
+  }
+</div>

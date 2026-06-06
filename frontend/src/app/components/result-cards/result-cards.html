@@ -1,0 +1,37 @@
+@if (result) {
+  <div class="cards">
+    <div class="card">
+      <h3>Strategija</h3>
+      <p>{{ result.strategy }}</p>
+    </div>
+
+    <div class="card">
+      <h3>Simbol</h3>
+      <p>{{ result.symbol }}</p>
+    </div>
+
+    <div class="card">
+      <h3>Ukupni povrat</h3>
+      <p [style.color]="result.result.return_pct >= 0 ? '#22c55e' : '#ef4444'">
+        {{ result.result.return_pct }}%
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Završni kapital</h3>
+      <p>{{ result.result.final_balance }} USDT</p>
+    </div>
+
+    <div class="card">
+      <h3>Max Drawdown</h3>
+      <p>{{ result.result.max_drawdown_pct }}%</p>
+    </div>
+
+    <div class="card">
+      <h3>Win Rate</h3>
+      <p [style.color]="result.result.win_rate_pct >= 50 ? '#22c55e' : '#f59e0b'">
+        {{ result.result.win_rate_pct }}%
+      </p>
+    </div>
+  </div>
+}

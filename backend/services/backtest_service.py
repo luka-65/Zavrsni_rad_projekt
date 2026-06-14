@@ -5,20 +5,48 @@ from strategies.bollinger import bollinger_bands_strategy
 from backtesting.backtester import run_backtest
 
 
-def run_moving_average(symbol, interval, limit, initial_balance, short_window, long_window):
-    df = get_dataframe(symbol, interval, limit)
+def run_moving_average(
+    symbol,
+    interval,
+    limit,
+    initial_balance,
+    short_window,
+    long_window,
+    start_date=None,
+    end_date=None
+):
+    df = get_dataframe(symbol, interval, limit, True, start_date, end_date)
     df = moving_average_strategy(df, short_window, long_window)
     return run_backtest(df, initial_balance)
 
 
-def run_rsi(symbol, interval, limit, initial_balance, period, oversold, overbought):
-    df = get_dataframe(symbol, interval, limit)
+def run_rsi(
+    symbol,
+    interval,
+    limit,
+    initial_balance,
+    period,
+    oversold,
+    overbought,
+    start_date=None,
+    end_date=None
+):
+    df = get_dataframe(symbol, interval, limit, True, start_date, end_date)
     df = rsi_strategy(df, period, oversold, overbought)
     return run_backtest(df, initial_balance)
 
 
-def run_bollinger(symbol, interval, limit, initial_balance, window, num_std):
-    df = get_dataframe(symbol, interval, limit)
+def run_bollinger(
+    symbol,
+    interval,
+    limit,
+    initial_balance,
+    window,
+    num_std,
+    start_date=None,
+    end_date=None
+):
+    df = get_dataframe(symbol, interval, limit, True, start_date, end_date)
     df = bollinger_bands_strategy(df, window, num_std)
     return run_backtest(df, initial_balance)
 
@@ -34,10 +62,16 @@ def format_compare_result(strategy, result):
     }
 
 
-def compare_strategies(symbol, interval, limit, initial_balance):
-    ma = run_moving_average(symbol, interval, limit, initial_balance, 20, 50)
-    rsi = run_rsi(symbol, interval, limit, initial_balance, 14, 30, 70)
-    bollinger = run_bollinger(symbol, interval, limit, initial_balance, 20, 2)
+def compare_strategies(symbol, interval, limit, initial_balance, start_date=None, end_date=None):
+    ma = run_moving_average(
+        symbol, interval, limit, initial_balance, 20, 50, start_date, end_date
+    )
+    rsi = run_rsi(
+        symbol, interval, limit, initial_balance, 14, 30, 70, start_date, end_date
+    )
+    bollinger = run_bollinger(
+        symbol, interval, limit, initial_balance, 20, 2, start_date, end_date
+    )
 
     return [
         format_compare_result("Moving Average Crossover", ma),

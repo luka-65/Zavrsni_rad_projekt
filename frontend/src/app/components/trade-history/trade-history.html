@@ -13,7 +13,15 @@
     <tbody>
       @for (trade of result.result.trades; track $index) {
         <tr>
-          <td>{{ formatTradeType(trade.type) }}</td>
+          <td>
+            <span
+              class="trade-badge"
+              [class.buy]="isBuyTrade(trade)"
+              [class.sell]="isSellTrade(trade)"
+            >
+              {{ formatTradeType(trade) }}
+            </span>
+          </td>
           <td>{{ trade.price }}</td>
           <td>{{ trade.profit_pct ?? '-' }}</td>
         </tr>

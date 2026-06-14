@@ -9,7 +9,13 @@ import { Component, Input } from '@angular/core';
 export class TradeHistoryComponent {
   @Input() result: any = null;
 
-  formatTradeType(type: string) {
+  formatTradeType(trade: any) {
+    if (trade?.is_final_close) {
+      return 'Prodaja na kraju razdoblja';
+    }
+
+    const type = trade?.type;
+
     if (type === 'BUY' || type === 'buy') {
       return 'Kupnja';
     }
@@ -19,5 +25,13 @@ export class TradeHistoryComponent {
     }
 
     return type;
+  }
+
+  isBuyTrade(trade: any) {
+    return trade?.type === 'BUY' || trade?.type === 'buy';
+  }
+
+  isSellTrade(trade: any) {
+    return trade?.type === 'SELL' || trade?.type === 'sell';
   }
 }

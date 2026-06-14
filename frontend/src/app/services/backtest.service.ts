@@ -21,9 +21,19 @@ export class BacktestService {
     );
   }
 
-  compareStrategies(symbol: string, interval: string, initialBalance: number) {
+  compareStrategies(
+    symbol: string,
+    interval: string,
+    initialBalance: number,
+    startDate: string,
+    endDate: string
+  ) {
+    const dateParams = startDate && endDate
+      ? `&start_date=${startDate}&end_date=${endDate}`
+      : '';
+
     return this.http.get<any>(
-      `${this.apiUrl}/compare?symbol=${symbol}&interval=${interval}&initial_balance=${initialBalance}`
+      `${this.apiUrl}/compare?symbol=${symbol}&interval=${interval}&initial_balance=${initialBalance}${dateParams}`
     );
   }
 }

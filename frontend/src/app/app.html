@@ -155,7 +155,7 @@
   @if (activeTab === 'simulation') {
     <app-simulation-form
   [symbolSearch]="symbolSearch"
-  (symbolSearchChange)="symbolSearch = $event"
+  (symbolSearchChange)="updateSymbolSearch($event)"
 
   [symbolResults]="symbolResults"
 
@@ -167,6 +167,15 @@
 
   [initialBalance]="initialBalance"
   (initialBalanceChange)="initialBalance = $event"
+
+  [startDate]="startDate"
+  (startDateChange)="startDate = $event"
+
+  [endDate]="endDate"
+  (endDateChange)="endDate = $event"
+
+  [dateRangeError]="dateRangeError"
+  [formValidationMessage]="formValidationMessage"
 
   [shortWindow]="shortWindow"
   (shortWindowChange)="shortWindow = $event"
@@ -191,6 +200,7 @@
 
   [hasResult]="result !== null"
   [isLoading]="isLoading"
+  [canRunBacktest]="canRunBacktest"
 
   (searchSymbolsEvent)="searchSymbols()"
   (selectSymbolEvent)="selectSymbol($event)"

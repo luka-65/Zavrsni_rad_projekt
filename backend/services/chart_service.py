@@ -4,8 +4,16 @@ from strategies.rsi import rsi_strategy
 from strategies.bollinger import bollinger_bands_strategy
 
 
-def get_moving_average_chart(symbol, interval, limit, short_window, long_window):
-    df = get_dataframe(symbol, interval, limit)
+def get_moving_average_chart(
+    symbol,
+    interval,
+    limit,
+    short_window,
+    long_window,
+    start_date=None,
+    end_date=None
+):
+    df = get_dataframe(symbol, interval, limit, True, start_date, end_date)
     df = moving_average_strategy(df, short_window, long_window)
 
     buy_signals = []
@@ -27,8 +35,17 @@ def get_moving_average_chart(symbol, interval, limit, short_window, long_window)
     }
 
 
-def get_rsi_chart(symbol, interval, limit, period, oversold, overbought):
-    df = get_dataframe(symbol, interval, limit)
+def get_rsi_chart(
+    symbol,
+    interval,
+    limit,
+    period,
+    oversold,
+    overbought,
+    start_date=None,
+    end_date=None
+):
+    df = get_dataframe(symbol, interval, limit, True, start_date, end_date)
     df = rsi_strategy(df, period, oversold, overbought)
 
     return {
@@ -40,8 +57,16 @@ def get_rsi_chart(symbol, interval, limit, period, oversold, overbought):
     }
 
 
-def get_bollinger_chart(symbol, interval, limit, window, num_std):
-    df = get_dataframe(symbol, interval, limit)
+def get_bollinger_chart(
+    symbol,
+    interval,
+    limit,
+    window,
+    num_std,
+    start_date=None,
+    end_date=None
+):
+    df = get_dataframe(symbol, interval, limit, True, start_date, end_date)
     df = bollinger_bands_strategy(df, window, num_std)
 
     return {

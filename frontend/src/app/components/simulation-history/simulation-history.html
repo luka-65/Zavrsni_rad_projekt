@@ -18,6 +18,7 @@
         <th>Strategija</th>
         <th>Simbol</th>
         <th>Interval</th>
+        <th>Razdoblje</th>
         <th>Početni kapital</th>
         <th>Završni kapital</th>
         <th>Povrat</th>
@@ -33,6 +34,7 @@
   <td>{{ formatStrategyName(simulation.strategy) }}</td>
   <td>{{ simulation.symbol }}</td>
   <td>{{ simulation.interval }}</td>
+  <td>{{ simulation.start_date || '-' }} - {{ simulation.end_date || '-' }}</td>
   <td>{{ simulation.initial_balance }}</td>
   <td>{{ simulation.final_balance }}</td>
   <td [style.color]="simulation.return_pct >= 0 ? '#22c55e' : '#ef4444'">

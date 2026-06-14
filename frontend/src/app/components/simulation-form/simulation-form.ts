@@ -8,14 +8,21 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './simulation-form.css'
 })
 export class SimulationFormComponent {
+  today = new Date().toISOString().slice(0, 10);
+
   @Input() symbolSearch = '';
   @Input() symbolResults: any[] = [];
 
   @Input() strategy = 'moving-average';
   @Input() interval = '1d';
   @Input() initialBalance = 10000;
+  @Input() startDate = '';
+  @Input() endDate = '';
+  @Input() dateRangeError = '';
+  @Input() formValidationMessage = '';
 
   @Input() isLoading = false;
+  @Input() canRunBacktest = false;
 
   @Input() shortWindow = 20;
   @Input() longWindow = 50;
@@ -31,6 +38,8 @@ export class SimulationFormComponent {
   @Output() strategyChange = new EventEmitter<string>();
   @Output() intervalChange = new EventEmitter<string>();
   @Output() initialBalanceChange = new EventEmitter<number>();
+  @Output() startDateChange = new EventEmitter<string>();
+  @Output() endDateChange = new EventEmitter<string>();
 
   @Output() shortWindowChange = new EventEmitter<number>();
   @Output() longWindowChange = new EventEmitter<number>();

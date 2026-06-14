@@ -19,7 +19,8 @@ def run_backtest(df, initial_balance=10000):
             trades.append({
                 "type": "BUY",
                 "price": round(buy_price, 2),
-                "profit_pct": None
+                "profit_pct": None,
+                "is_final_close": False
             })
 
         elif row["position"] == -1 and position > 0:
@@ -32,7 +33,8 @@ def run_backtest(df, initial_balance=10000):
             trades.append({
                 "type": "SELL",
                 "price": round(sell_price, 2),
-                "profit_pct": round(profit_pct, 2)
+                "profit_pct": round(profit_pct, 2),
+                "is_final_close": False
             })
 
         current_equity = balance
@@ -42,9 +44,21 @@ def run_backtest(df, initial_balance=10000):
 
         equity_curve.append(current_equity)
 
-    if position > 0:
+    open_position = position > 0
+
+    if open_position:
         final_price = df.iloc[-1]["close"]
         balance = position * final_price
+        profit_pct = ((final_price - buy_price) / buy_price) * 100
+
+        trades.append({
+            "type": "SELL",
+            "price": round(final_price, 2),
+            "profit_pct": round(profit_pct, 2),
+            "is_final_close": True
+        })
+
+        position = 0
 
     final_balance = balance
 
@@ -60,6 +74,7 @@ def run_backtest(df, initial_balance=10000):
         "max_drawdown_pct": round(max_drawdown, 2),
         "win_rate_pct": round(win_rate, 2),
         "number_of_trades": len([t for t in trades if t["type"] == "SELL"]),
+        "open_position": bool(open_position),
         "trades": trades
     }
 

@@ -45,10 +45,12 @@ export class App implements OnInit {
   symbolSearch = '';
   symbolResults: any[] = [];
 
-  symbol = 'BTCUSDT';
+  symbol = '';
   strategy = 'moving-average';
   interval = '1d';
   initialBalance = 10000;
+  startDate = '';
+  endDate = '';
 
   activeTab = 'dashboard';
   isLoading = false;
@@ -78,21 +80,11 @@ export class App implements OnInit {
 
   ngOnInit() {
   if (this.isBrowser) {
-    this.loadSimulations();
-    this.loadDashboardStats();
-    this.loadBestBacktest();
-
-    const savedSymbol = localStorage.getItem('symbol');
     const savedStrategy = localStorage.getItem('strategy');
     const savedInterval = localStorage.getItem('interval');
 
     localStorage.removeItem('lastResult');
     localStorage.removeItem('activeTab');
-
-    if (savedSymbol) {
-      this.symbol = savedSymbol;
-      this.symbolSearch = savedSymbol;
-    }
 
     if (savedStrategy) {
       this.strategy = savedStrategy;
@@ -101,6 +93,12 @@ export class App implements OnInit {
     if (savedInterval) {
       this.interval = savedInterval;
     }
+
+    setTimeout(() => {
+      this.loadSimulations();
+      this.loadDashboardStats();
+      this.loadBestBacktest();
+    });
   }
 }
 
@@ -110,6 +108,18 @@ setActiveTab(tab: string) {
   if (tab === 'dashboard') {
     setTimeout(() => {
       this.loadDashboardChart();
+    });
+  }
+
+  if (tab === 'results' && this.result) {
+    setTimeout(() => {
+      this.loadChart();
+    });
+  }
+
+  if (tab === 'compare' && this.compareResults.length > 0) {
+    setTimeout(() => {
+      this.loadCompareChart();
     });
   }
 }
@@ -127,23 +137,38 @@ setActiveTab(tab: string) {
   }
 
   getStrategyParams() {
+    const dateParams = this.getDateParams();
+
     if (this.strategy === 'moving-average') {
-      return `&short_window=${this.shortWindow}&long_window=${this.longWindow}`;
+      return `&short_window=${this.shortWindow}&long_window=${this.longWindow}${dateParams}`;
     }
 
     if (this.strategy === 'rsi') {
-      return `&period=${this.rsiPeriod}&oversold=${this.oversold}&overbought=${this.overbought}`;
+      return `&period=${this.rsiPeriod}&oversold=${this.oversold}&overbought=${this.overbought}${dateParams}`;
     }
 
     if (this.strategy === 'bollinger') {
-      return `&window=${this.bollingerWindow}&num_std=${this.numStd}`;
+      return `&window=${this.bollingerWindow}&num_std=${this.numStd}${dateParams}`;
     }
 
-    return '';
+    return dateParams;
+  }
+
+  getDateParams() {
+    if (!this.startDate || !this.endDate) {
+      return '';
+    }
+
+    return `&start_date=${this.startDate}&end_date=${this.endDate}`;
   }
 
   runBacktest() {
   if (this.isLoading) {
+    return;
+  }
+
+  if (!this.canRunBacktest) {
+    alert(this.formValidationMessage);
     return;
   }
 
@@ -172,7 +197,6 @@ setActiveTab(tab: string) {
         this.activeTab = 'results';
 
         if (this.isBrowser) {
-          localStorage.setItem('symbol', this.symbol);
           localStorage.setItem('strategy', this.strategy);
           localStorage.setItem('interval', this.interval);
         }
@@ -201,18 +225,24 @@ setActiveTab(tab: string) {
     return;
   }
     this.backtestService
-      .compareStrategies(this.symbol, this.interval, this.initialBalance)
+      .compareStrategies(
+        this.symbol,
+        this.interval,
+        this.initialBalance,
+        this.startDate,
+        this.endDate
+      )
       .subscribe((response) => {
         this.compareResults = response.results;
-        this.activeTab = 'compare';
-        this.cdr.detectChanges();
-        this.loadCompareChart();
-
         this.bestStrategy = this.compareResults.reduce((best, current) =>
           current.return_pct > best.return_pct ? current : best
         );
 
-       
+        this.activeTab = 'compare';
+        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.loadCompareChart();
+        });
       });
   }
 
@@ -545,6 +575,77 @@ setActiveTab(tab: string) {
     });
   }
 
+  updateSymbolSearch(value: string) {
+    this.symbolSearch = value;
+
+    if (value !== this.symbol) {
+      this.symbol = '';
+    }
+  }
+
+  get dateRangeError() {
+    if (!this.startDate || !this.endDate) {
+      return 'Odaberi datum od i datum do.';
+    }
+
+    const start = new Date(this.startDate);
+    const end = new Date(this.endDate);
+
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      return 'Odabrani datumi nisu ispravni.';
+    }
+
+    if (end < start) {
+      return 'Datum do ne može biti prije datuma od.';
+    }
+
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    if (end > today) {
+      return 'Datum do ne može biti u budućnosti.';
+    }
+
+    const days = Math.ceil(
+      (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    const maxDays = this.getMaxRangeDays(this.interval);
+
+    if (maxDays !== null && days > maxDays) {
+      return `Za interval ${this.interval} moguće je odabrati najviše ${maxDays} dana.`;
+    }
+
+    return '';
+  }
+
+  get formValidationMessage() {
+    if (!this.symbol.trim()) {
+      return 'Prvo odaberi kriptovalutu iz pretrage.';
+    }
+
+    if (this.dateRangeError) {
+      return this.dateRangeError;
+    }
+
+    return '';
+  }
+
+  getMaxRangeDays(interval: string) {
+    const limits: Record<string, number> = {
+      '1h': 90,
+      '4h': 365,
+      '1d': 1825,
+      '1w': 3650,
+      '1M': 3650
+    };
+
+    return limits[interval] ?? null;
+  }
+
+  get canRunBacktest() {
+    return this.symbol.trim().length > 0 && !this.dateRangeError;
+  }
+
   newSimulation() {
   this.result = null;
   this.compareResults = [];
@@ -553,10 +654,12 @@ setActiveTab(tab: string) {
   this.symbolSearch = '';
   this.symbolResults = [];
 
-  this.symbol = 'BTCUSDT';
+  this.symbol = '';
   this.strategy = 'moving-average';
   this.interval = '1d';
   this.initialBalance = 10000;
+  this.startDate = '';
+  this.endDate = '';
 
   this.shortWindow = 20;
   this.longWindow = 50;
@@ -611,11 +714,15 @@ setActiveTab(tab: string) {
         strategy: simulation.strategy,
         symbol: simulation.symbol,
         interval: simulation.interval,
+        start_date: simulation.start_date,
+        end_date: simulation.end_date,
         result: simulation.result
       };
     
       this.symbol = simulation.symbol;
       this.interval = simulation.interval;
+      this.startDate = simulation.start_date || '';
+      this.endDate = simulation.end_date || '';
       this.strategy = this.mapStrategyToFrontend(simulation.strategy);
 
       this.activeTab = 'results';
@@ -634,13 +741,18 @@ deleteSimulation(id: number) {
     return;
   }
 
+  const previousSimulations = [...this.simulations];
+
+  this.simulations = this.simulations.filter(
+    (simulation) => Number(simulation.id) !== Number(id)
+  );
+  this.cdr.detectChanges();
+
   this.simulationService
     .deleteSimulation(id)
     .subscribe({
       next: () => {
-        this.simulations = this.simulations.filter(
-          (simulation) => simulation.id !== id
-        );
+        this.loadSimulations();
         this.loadDashboardStats();
         this.loadBestBacktest();
 
@@ -653,6 +765,8 @@ deleteSimulation(id: number) {
       },
       error: (error) => {
         console.error(error);
+        this.simulations = previousSimulations;
+        this.cdr.detectChanges();
         alert('Doslo je do greske pri brisanju simulacije.');
       }
     });

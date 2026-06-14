@@ -17,12 +17,14 @@ export class SimulationHistoryComponent {
       'Strategija',
       'Simbol',
       'Interval',
+      'Razdoblje od',
+      'Razdoblje do',
       'Početni kapital',
       'Završni kapital',
       'Povrat (%)',
       'Najveći pad (%)',
       'Stopa dobitnih transakcija (%)',
-      'Broj transakcija'
+      'Broj zatvorenih transakcija'
     ];
 
     const rows = this.simulations.map((simulation) => [
@@ -31,6 +33,8 @@ export class SimulationHistoryComponent {
       this.formatStrategyName(simulation.strategy),
       simulation.symbol,
       simulation.interval,
+      simulation.start_date,
+      simulation.end_date,
       simulation.initial_balance,
       simulation.final_balance,
       simulation.return_pct,

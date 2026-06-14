@@ -32,8 +32,12 @@ export class PdfService {
     doc.text(`Simbol: ${result.symbol}`, 10, 64);
     doc.text(`Interval: ${result.interval}`, 10, 76);
 
+    if (result.start_date && result.end_date) {
+      doc.text(`Razdoblje: ${result.start_date} - ${result.end_date}`, 10, 88);
+    }
+
     doc.setFontSize(14);
-    doc.text('Rezultati simulacije', 10, 95);
+    doc.text('Rezultati simulacije', 10, 100);
 
     const rows = [
       ['Pocetni kapital', `${result.result.initial_balance} USDT`],
@@ -41,10 +45,11 @@ export class PdfService {
       ['Ukupni povrat', `${result.result.return_pct}%`],
       ['Najveci pad', `${result.result.max_drawdown_pct}%`],
       ['Stopa dobitnih transakcija', `${result.result.win_rate_pct}%`],
-      ['Broj transakcija', `${result.result.number_of_trades}`]
+      ['Broj zatvorenih transakcija', `${result.result.number_of_trades}`],
+      ['Otvorena pozicija', result.result.open_position ? 'Da' : 'Ne']
     ];
 
-    let y = 108;
+    let y = 113;
 
     rows.forEach((row) => {
       doc.setFillColor(241, 245, 249);
@@ -64,7 +69,7 @@ export class PdfService {
     doc.text(
       'Napomena: Rezultati predstavljaju simulacijsko testiranje nad povijesnim podacima i ne predstavljaju financijski savjet.',
       10,
-      190,
+      205,
       { maxWidth: 185 }
     );
 

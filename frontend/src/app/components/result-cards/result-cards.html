@@ -33,5 +33,15 @@
         {{ result.result.win_rate_pct }}%
       </p>
     </div>
+
+    <div class="card">
+      <h3>Broj zatvorenih transakcija</h3>
+      <p>{{ result.result.number_of_trades }}</p>
+    </div>
+
+    <div class="card">
+      <h3>Otvorena pozicija</h3>
+      <p>{{ result.result.open_position ? 'Da' : 'Ne' }}</p>
+    </div>
   </div>
 }

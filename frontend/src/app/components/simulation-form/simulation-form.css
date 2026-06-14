@@ -19,6 +19,17 @@ input {
   color: white;
 }
 
+.date-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.date-grid div {
+  display: grid;
+  gap: 8px;
+}
+
 button {
   background: #0ea5e9;
   color: white;
@@ -70,6 +81,12 @@ button:disabled {
   background: #334155;
 }
 
+.form-help {
+  color: #fbbf24;
+  font-size: 14px;
+  margin: -4px 0 4px;
+}
+
 @media (max-width: 560px) {
   .form {
     gap: 10px;
@@ -79,5 +96,9 @@ button:disabled {
     align-items: flex-start;
     flex-direction: column;
     gap: 4px;
+  }
+
+  .date-grid {
+    grid-template-columns: 1fr;
   }
 }

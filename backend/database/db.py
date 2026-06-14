@@ -27,6 +27,8 @@ def init_db():
             win_rate_pct REAL NOT NULL,
             number_of_trades INTEGER NOT NULL,
             result_json TEXT,
+            start_date TEXT,
+            end_date TEXT,
             created_at TEXT NOT NULL
         )
     """)
@@ -39,15 +41,34 @@ def init_db():
     except sqlite3.OperationalError:
         pass
 
+    try:
+        cursor.execute("""
+            ALTER TABLE simulations
+            ADD COLUMN start_date TEXT
+        """)
+    except sqlite3.OperationalError:
+        pass
+
+    try:
+        cursor.execute("""
+            ALTER TABLE simulations
+            ADD COLUMN end_date TEXT
+        """)
+    except sqlite3.OperationalError:
+        pass
+
     conn.commit()
     conn.close()
 
     
 
 
-def save_simulation(strategy, symbol, interval, result):
+def save_simulation(strategy, symbol, interval, result, start_date=None, end_date=None):
     conn = get_connection()
     cursor = conn.cursor()
+
+    result["start_date"] = start_date
+    result["end_date"] = end_date
 
     cursor.execute("""
         INSERT INTO simulations (
@@ -61,9 +82,11 @@ def save_simulation(strategy, symbol, interval, result):
             win_rate_pct,
             number_of_trades,
             result_json,
+            start_date,
+            end_date,
             created_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         strategy,
         symbol,
@@ -75,6 +98,8 @@ def save_simulation(strategy, symbol, interval, result):
         result["win_rate_pct"],
         result["number_of_trades"],
         json.dumps(result),
+        start_date,
+        end_date,
         datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     ))
 

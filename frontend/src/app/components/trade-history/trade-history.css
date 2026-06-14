@@ -4,7 +4,7 @@ h2 {
 }
 
 table {
-  width: 900px;
+  width: min(100%, 1180px);
   border-collapse: collapse;
   margin-top: 15px;
   margin-bottom: 30px;
@@ -26,4 +26,15 @@ th {
 
 tr:hover {
   background: #293548;
+}
+
+@media (max-width: 700px) {
+  :host {
+    display: block;
+    overflow-x: auto;
+  }
+
+  table {
+    min-width: 560px;
+  }
 }

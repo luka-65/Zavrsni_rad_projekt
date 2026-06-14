@@ -172,3 +172,19 @@ def get_simulation_by_id(simulation_id):
         )
 
     return simulation
+
+def delete_simulation(simulation_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        DELETE FROM simulations
+        WHERE id = ?
+    """, (simulation_id,))
+
+    deleted_count = cursor.rowcount
+
+    conn.commit()
+    conn.close()
+
+    return deleted_count > 0

@@ -1,12 +1,12 @@
 <div class="container">
-  <h1>Crypto Trading Simulator</h1>
+  <h1>Simulator trgovanja kriptovalutama</h1>
 
   <div class="tabs">
   <button
-    [class.active]="activeTab === 'simulation'"
-    (click)="setActiveTab('simulation')"
+    [class.active]="activeTab === 'dashboard'"
+    (click)="setActiveTab('dashboard')"
   >
-    Simulacija
+    Nadzorna ploča
   </button>
 
   <button
@@ -29,17 +29,128 @@
     [class.active]="activeTab === 'history'"
     (click)="setActiveTab('history')"
   >
-    Povijest i statistika
+    Povijest
   </button>
 </div>
 
-<button
-  class="new-button"
-  type="button"
-  (click)="newSimulation()"
->
-  Nova simulacija
-</button>
+  @if (activeTab === 'dashboard') {
+    <section class="dashboard-intro">
+      <div>
+        <p>Pregled sustava</p>
+        <h2>Nadzorna ploča simulacija</h2>
+      </div>
+
+      <button
+        class="new-button dashboard-cta top-cta"
+        type="button"
+        (click)="newSimulation()"
+      >
+        Nova simulacija
+      </button>
+    </section>
+
+    <app-dashboard-stats
+      [dashboardStats]="dashboardStats">
+    </app-dashboard-stats>
+
+    <app-best-backtest
+      [bestBacktest]="bestBacktest">
+    </app-best-backtest>
+
+    @if (roiTrendSimulations.length > 0) {
+      <section class="dashboard-chart">
+        <div class="section-header">
+          <h2>Povrat kroz vrijeme</h2>
+          <span>Zadnjih 10 simulacija</span>
+        </div>
+
+        <div class="chart-shell">
+          <canvas id="dashboardRoiChart"></canvas>
+        </div>
+      </section>
+    }
+
+    @if (averageRoiByStrategy.length > 0) {
+      <section class="strategy-roi">
+        <div class="section-header">
+          <h2>Prosječni povrat po strategiji</h2>
+          <span>Sve simulacije</span>
+        </div>
+
+        <div class="strategy-roi-list">
+          @for (item of averageRoiByStrategy; track item.strategy) {
+            <div class="strategy-roi-row">
+              <div class="strategy-roi-meta">
+                <strong>{{ formatStrategyName(item.strategy) }}</strong>
+                <span>{{ item.count }} simulacija</span>
+              </div>
+
+              <div class="strategy-roi-bar-shell">
+                <div
+                  class="strategy-roi-bar"
+                  [class.negative]="item.averageRoi < 0"
+                  [style.width]="getAverageRoiBarWidth(item.averageRoi)"
+                ></div>
+              </div>
+
+              <div
+                class="strategy-roi-value"
+                [style.color]="item.averageRoi >= 0 ? '#22c55e' : '#ef4444'"
+              >
+                {{ item.averageRoi }}%
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    @if (topSimulations.length > 0) {
+      <section class="top-simulations">
+        <div class="section-header">
+          <h2>Top 5 simulacija</h2>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Simbol</th>
+              <th>Strategija</th>
+              <th>Povrat</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (simulation of topSimulations; track simulation.id; let index = $index) {
+              <tr>
+                <td>
+                  <span
+                    class="rank-badge"
+                    [class.gold]="getRankClass(index) === 'gold'"
+                    [class.silver]="getRankClass(index) === 'silver'"
+                    [class.bronze]="getRankClass(index) === 'bronze'"
+                  >
+                    {{ getRankLabel(index) }}
+                  </span>
+                </td>
+                <td>{{ simulation.symbol }}</td>
+                <td>{{ formatStrategyName(simulation.strategy) }}</td>
+                <td [style.color]="simulation.return_pct >= 0 ? '#22c55e' : '#ef4444'">
+                  {{ simulation.return_pct }}%
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+    } @else {
+      <p class="empty-message">
+        Još nema spremljenih simulacija.
+      </p>
+    }
+
+  }
 
   @if (activeTab === 'simulation') {
     <app-simulation-form
@@ -128,17 +239,10 @@
 }
 
   @if (activeTab === 'history') {
-    <app-dashboard-stats
-      [dashboardStats]="dashboardStats">
-    </app-dashboard-stats>
-
-    <app-best-backtest
-      [bestBacktest]="bestBacktest">
-    </app-best-backtest>
-
     <app-simulation-history
       [simulations]="simulations"
-      (selectSimulationEvent)="loadSimulationDetails($event)">
+      (selectSimulationEvent)="loadSimulationDetails($event)"
+      (deleteSimulationEvent)="deleteSimulation($event)">
     </app-simulation-history>
   }
 </div>

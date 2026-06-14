@@ -54,9 +54,9 @@
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 40px;
+  padding: 40px 56px;
   min-height: 100vh;
 }
 
@@ -91,9 +91,9 @@ h1 {
 .new-button {
   display: block;
   margin: 0 auto 30px auto;
-  background: #cbd5e1;
-  color: #1e293b;
-  border: 1px solid #94a3b8;
+  background: #0ea5e9;
+  color: #ffffff;
+  border: 1px solid #38bdf8;
   border-radius: 10px;
   padding: 12px 20px;
   cursor: pointer;
@@ -101,5 +101,272 @@ h1 {
 }
 
 .new-button:hover {
-  background: #94a3b8;
+  background: #0284c7;
+}
+
+.dashboard-cta {
+  margin-top: 30px;
+  padding: 18px 34px;
+  font-size: 18px;
+  box-shadow: 0 14px 35px rgba(14, 165, 233, 0.22);
+}
+
+.top-cta {
+  margin: 0;
+}
+
+.dashboard-intro {
+  width: 100%;
+  max-width: 1180px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0 auto 28px;
+  padding: 24px 28px;
+  background: #111827;
+  border: 1px solid #334155;
+  border-radius: 8px;
+}
+
+.dashboard-intro p {
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: bold;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+}
+
+.dashboard-intro h2 {
+  color: #f8fafc;
+  font-size: 32px;
+  margin: 0;
+}
+
+.dashboard-chart,
+.strategy-roi,
+.top-simulations {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto 30px;
+}
+
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.section-header h2 {
+  color: #f8fafc;
+  margin: 0 0 15px;
+}
+
+.section-header span {
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.chart-shell {
+  height: 280px;
+  padding: 18px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+}
+
+.strategy-roi-list {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+}
+
+.strategy-roi-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(260px, 2fr) 90px;
+  align-items: center;
+  gap: 18px;
+  padding: 12px;
+  background: #111827;
+  border: 1px solid #334155;
+  border-radius: 8px;
+}
+
+.strategy-roi-meta {
+  display: grid;
+  gap: 4px;
+}
+
+.strategy-roi-meta strong {
+  color: #f8fafc;
+}
+
+.strategy-roi-meta span {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.strategy-roi-bar-shell {
+  height: 14px;
+  overflow: hidden;
+  background: #334155;
+  border-radius: 999px;
+}
+
+.strategy-roi-bar {
+  height: 100%;
+  background: #22c55e;
+  border-radius: 999px;
+}
+
+.strategy-roi-bar.negative {
+  background: #ef4444;
+}
+
+.strategy-roi-value {
+  text-align: right;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.top-simulations table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #1e293b;
+}
+
+.top-simulations th {
+  background: #334155;
+  color: #ffffff;
+}
+
+.top-simulations td,
+.top-simulations th {
+  padding: 12px;
+  border: 1px solid #475569;
+}
+
+.top-simulations tr:hover {
+  background: #293548;
+}
+
+.rank-badge {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #0f172a;
+  font-weight: bold;
+  background: #cbd5e1;
+}
+
+.rank-badge.gold {
+  background: #facc15;
+}
+
+.rank-badge.silver {
+  background: #cbd5e1;
+}
+
+.rank-badge.bronze {
+  background: #d97706;
+  color: #ffffff;
+}
+
+@media (max-width: 900px) {
+  .container {
+    padding: 28px 24px;
+  }
+
+  h1 {
+    font-size: 34px;
+  }
+
+  .tabs {
+    justify-content: stretch;
+  }
+
+  .tabs button {
+    flex: 1 1 180px;
+  }
+
+  .dashboard-intro {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dashboard-intro h2 {
+    font-size: 28px;
+  }
+
+  .top-cta {
+    width: 100%;
+  }
+
+  .strategy-roi-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .strategy-roi-value {
+    text-align: left;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 22px 14px;
+  }
+
+  h1 {
+    font-size: 28px;
+    line-height: 1.15;
+  }
+
+  .tabs {
+    gap: 8px;
+  }
+
+  .tabs button {
+    flex-basis: 100%;
+    padding: 11px 14px;
+  }
+
+  .dashboard-intro {
+    padding: 18px;
+  }
+
+  .dashboard-intro h2 {
+    font-size: 24px;
+  }
+
+  .dashboard-cta {
+    font-size: 16px;
+    padding: 14px 18px;
+  }
+
+  .section-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .chart-shell {
+    height: 230px;
+    padding: 10px;
+  }
+
+  .top-simulations {
+    overflow-x: auto;
+  }
+
+  .top-simulations table {
+    min-width: 560px;
+  }
 }

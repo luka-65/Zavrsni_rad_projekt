@@ -1,15 +1,17 @@
 .dashboard-cards {
+  width: 100%;
+  max-width: 1180px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 18px;
-  margin-bottom: 30px;
+  margin: 0 auto 30px;
 }
 
 .dashboard-card {
   background: #1e293b;
   border: 1px solid #334155;
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 8px;
+  padding: 24px;
   text-align: center;
   box-shadow: 0 0 15px rgba(0,0,0,0.2);
 }
@@ -25,4 +27,21 @@
   font-weight: bold;
   color: #38bdf8;
   margin: 0;
+}
+
+@media (max-width: 1000px) {
+  .dashboard-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .dashboard-cards {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .dashboard-card {
+    padding: 18px;
+  }
 }

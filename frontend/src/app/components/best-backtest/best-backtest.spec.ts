@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { BestBacktest } from './best-backtest';
+import { BestBacktestComponent } from './best-backtest';
 
-describe('BestBacktest', () => {
-  let component: BestBacktest;
-  let fixture: ComponentFixture<BestBacktest>;
+describe('BestBacktestComponent', () => {
+  let component: BestBacktestComponent;
+  let fixture: ComponentFixture<BestBacktestComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [BestBacktest],
+      imports: [BestBacktestComponent],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(BestBacktest);
+    fixture = TestBed.createComponent(BestBacktestComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

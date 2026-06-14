@@ -1,5 +1,15 @@
 @if (simulations.length > 0) {
-  <h2>Povijest simulacija</h2>
+  <div class="history-header">
+    <h2>Povijest simulacija</h2>
+
+    <button
+      class="export-button"
+      type="button"
+      (click)="exportCsv()"
+    >
+      Preuzmi CSV
+    </button>
+  </div>
 
   <table>
     <thead>
@@ -10,8 +20,8 @@
         <th>Interval</th>
         <th>Početni kapital</th>
         <th>Završni kapital</th>
-        <th>ROI</th>
-        <th>Win Rate</th>
+        <th>Povrat</th>
+        <th>Stopa dobitnih transakcija</th>
         <th>Akcija</th>
       </tr>
     </thead>
@@ -20,7 +30,7 @@
       @for (simulation of simulations; track simulation.id) {
         <tr>
   <td>{{ simulation.created_at }}</td>
-  <td>{{ simulation.strategy }}</td>
+  <td>{{ formatStrategyName(simulation.strategy) }}</td>
   <td>{{ simulation.symbol }}</td>
   <td>{{ simulation.interval }}</td>
   <td>{{ simulation.initial_balance }}</td>
@@ -32,6 +42,13 @@
   <td>
     <button (click)="selectSimulationEvent.emit(simulation.id)">
       Detalji
+    </button>
+    <button
+      class="delete-button"
+      type="button"
+      (click)="deleteSimulationEvent.emit(simulation.id)"
+    >
+      Obriši
     </button>
   </td>
 </tr>

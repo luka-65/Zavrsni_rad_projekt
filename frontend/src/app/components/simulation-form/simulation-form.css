@@ -1,7 +1,7 @@
 .form {
   display: grid;
   gap: 12px;
-  max-width: 420px;
+  width: min(100%, 520px);
   margin: 0 auto 30px auto;
 }
 
@@ -68,4 +68,16 @@ button:disabled {
 
 .symbol-item:hover {
   background: #334155;
+}
+
+@media (max-width: 560px) {
+  .form {
+    gap: 10px;
+  }
+
+  .symbol-item {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
 }

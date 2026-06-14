@@ -19,7 +19,7 @@ export class PdfService {
 
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(18);
-    doc.text('Crypto Trading Simulator', 10, 12);
+    doc.text('Simulator trgovanja kriptovalutama', 10, 12);
 
     doc.setFontSize(11);
     doc.text('Izvještaj simulacije trgovanja kriptovalutama', 10, 20);
@@ -28,7 +28,7 @@ export class PdfService {
     doc.setFontSize(12);
 
     doc.text(`Datum izrade: ${today}`, 10, 40);
-    doc.text(`Strategija: ${result.strategy}`, 10, 52);
+    doc.text(`Strategija: ${this.formatStrategyName(result.strategy)}`, 10, 52);
     doc.text(`Simbol: ${result.symbol}`, 10, 64);
     doc.text(`Interval: ${result.interval}`, 10, 76);
 
@@ -37,10 +37,10 @@ export class PdfService {
 
     const rows = [
       ['Pocetni kapital', `${result.result.initial_balance} USDT`],
-      ['Zavrsni kapital', `${result.result.final_balance} USDT`],
+      ['Završni kapital', `${result.result.final_balance} USDT`],
       ['Ukupni povrat', `${result.result.return_pct}%`],
-      ['Max Drawdown', `${result.result.max_drawdown_pct}%`],
-      ['Win Rate', `${result.result.win_rate_pct}%`],
+      ['Najveci pad', `${result.result.max_drawdown_pct}%`],
+      ['Stopa dobitnih transakcija', `${result.result.win_rate_pct}%`],
       ['Broj transakcija', `${result.result.number_of_trades}`]
     ];
 
@@ -69,5 +69,21 @@ export class PdfService {
     );
 
     doc.save(`izvjestaj_${result.symbol}_${strategy}.pdf`);
+  }
+
+  private formatStrategyName(strategyName: string) {
+    if (strategyName === 'Moving Average Crossover') {
+      return 'Križanje pomicnih prosjeka';
+    }
+
+    if (strategyName === 'Relative Strength Index') {
+      return 'Indeks relativne snage';
+    }
+
+    if (strategyName === 'Bollinger Bands') {
+      return 'Bollingerove ovojnice';
+    }
+
+    return strategyName;
   }
 }

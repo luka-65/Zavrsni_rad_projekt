@@ -4,7 +4,7 @@ h2 {
 }
 
 table {
-  width: 900px;
+  width: min(100%, 1180px);
   border-collapse: collapse;
   margin-top: 15px;
   margin-bottom: 30px;
@@ -30,7 +30,7 @@ tr:hover {
 
 canvas {
   display: block;
-  width: 1000px !important;
+  width: min(100%, 1000px) !important;
   height: 420px !important;
   margin: 20px auto 40px auto;
   background: #1e293b;
@@ -40,7 +40,7 @@ canvas {
 }
 
 #compareChart {
-  width: 1000px !important;
+  width: min(100%, 1000px) !important;
   max-height: 400px;
   margin-top: 20px;
 }
@@ -69,4 +69,32 @@ canvas {
 .best-card span {
   font-size: 20px;
   font-weight: bold;
+}
+
+@media (max-width: 900px) {
+  :host {
+    display: block;
+    overflow-x: auto;
+  }
+
+  table {
+    min-width: 760px;
+  }
+
+  canvas,
+  #compareChart {
+    height: 320px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  canvas,
+  #compareChart {
+    height: 260px !important;
+    padding: 10px;
+  }
+
+  .best-card {
+    max-width: none;
+  }
 }

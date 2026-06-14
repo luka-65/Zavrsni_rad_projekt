@@ -6,14 +6,14 @@
       <tr>
         <th>Tip</th>
         <th>Cijena</th>
-        <th>Profit %</th>
+        <th>Dobit %</th>
       </tr>
     </thead>
 
     <tbody>
       @for (trade of result.result.trades; track $index) {
         <tr>
-          <td>{{ trade.type }}</td>
+          <td>{{ formatTradeType(trade.type) }}</td>
           <td>{{ trade.price }}</td>
           <td>{{ trade.profit_pct ?? '-' }}</td>
         </tr>

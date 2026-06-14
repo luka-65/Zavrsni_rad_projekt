@@ -33,6 +33,7 @@ BestBacktestComponent],
 export class App implements OnInit {
   result: any = null;
   chart: any = null;
+  dashboardChart: any = null;
   simulations: any[] = [];
 
   compareResults: any[] = [];
@@ -49,7 +50,7 @@ export class App implements OnInit {
   interval = '1d';
   initialBalance = 10000;
 
-  activeTab = 'simulation';
+  activeTab = 'dashboard';
   isLoading = false;
   isBrowser = false;
 
@@ -76,24 +77,17 @@ export class App implements OnInit {
 }
 
   ngOnInit() {
-  this.loadSimulations();
-  this.loadDashboardStats();
-  this.loadBestBacktest();
-
   if (this.isBrowser) {
-    const savedResult = localStorage.getItem('lastResult');
-    const savedTab = localStorage.getItem('activeTab');
+    this.loadSimulations();
+    this.loadDashboardStats();
+    this.loadBestBacktest();
+
     const savedSymbol = localStorage.getItem('symbol');
     const savedStrategy = localStorage.getItem('strategy');
     const savedInterval = localStorage.getItem('interval');
 
-    if (savedResult) {
-      this.result = JSON.parse(savedResult);
-    }
-
-    if (savedTab) {
-      this.activeTab = savedTab;
-    }
+    localStorage.removeItem('lastResult');
+    localStorage.removeItem('activeTab');
 
     if (savedSymbol) {
       this.symbol = savedSymbol;
@@ -113,8 +107,10 @@ export class App implements OnInit {
 setActiveTab(tab: string) {
   this.activeTab = tab;
 
-  if (this.isBrowser) {
-    localStorage.setItem('activeTab', tab);
+  if (tab === 'dashboard') {
+    setTimeout(() => {
+      this.loadDashboardChart();
+    });
   }
 }
 
@@ -171,12 +167,11 @@ setActiveTab(tab: string) {
     )
     .subscribe({
       next: (data) => {
+        this.isLoading = false;
         this.result = data;
         this.activeTab = 'results';
 
         if (this.isBrowser) {
-          localStorage.setItem('lastResult', JSON.stringify(this.result));
-          localStorage.setItem('activeTab', this.activeTab);
           localStorage.setItem('symbol', this.symbol);
           localStorage.setItem('strategy', this.strategy);
           localStorage.setItem('interval', this.interval);
@@ -187,7 +182,9 @@ setActiveTab(tab: string) {
         this.loadBestBacktest();
         this.cdr.detectChanges();
 
-        this.loadChart();
+        setTimeout(() => {
+          this.loadChart();
+        });
       },
       error: (error) => {
         console.error(error);
@@ -234,10 +231,10 @@ setActiveTab(tab: string) {
     this.compareChart = new Chart(canvas, {
       type: 'bar',
       data: {
-        labels: this.compareResults.map((item) => item.strategy),
+        labels: this.compareResults.map((item) => this.formatStrategyName(item.strategy)),
         datasets: [
           {
-            label: 'ROI (%)',
+            label: 'Povrat (%)',
             data: this.compareResults.map((item) => item.return_pct)
           }
         ]
@@ -264,6 +261,183 @@ setActiveTab(tab: string) {
   loadSimulations() {
     this.simulationService.getSimulations().subscribe((response) => {
       this.simulations = response.data;
+
+      if (this.activeTab === 'dashboard') {
+        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.loadDashboardChart();
+        });
+      }
+    });
+  }
+
+  get topSimulations() {
+    return [...this.simulations]
+      .sort((first, second) => second.return_pct - first.return_pct)
+      .slice(0, 5);
+  }
+
+  get roiTrendSimulations() {
+    return [...this.simulations]
+      .sort((first, second) =>
+        new Date(first.created_at).getTime() - new Date(second.created_at).getTime()
+      )
+      .slice(-10);
+  }
+
+  get averageRoiByStrategy() {
+    const grouped = new Map<string, { total: number; count: number }>();
+
+    this.simulations.forEach((simulation) => {
+      const current = grouped.get(simulation.strategy) || {
+        total: 0,
+        count: 0
+      };
+
+      current.total += Number(simulation.return_pct);
+      current.count += 1;
+
+      grouped.set(simulation.strategy, current);
+    });
+
+    return Array.from(grouped.entries())
+      .map(([strategy, values]) => ({
+        strategy,
+        averageRoi: Number((values.total / values.count).toFixed(2)),
+        count: values.count
+      }))
+      .sort((first, second) => second.averageRoi - first.averageRoi);
+  }
+
+  getAverageRoiBarWidth(averageRoi: number) {
+    const maxAverage = Math.max(
+      ...this.averageRoiByStrategy.map((item) => Math.abs(item.averageRoi)),
+      1
+    );
+
+    return `${Math.max((Math.abs(averageRoi) / maxAverage) * 100, 6)}%`;
+  }
+
+  formatStrategyName(strategyName: string) {
+    if (strategyName === 'Moving Average Crossover' || strategyName === 'moving-average') {
+      return 'Križanje pomičnih prosjeka';
+    }
+
+    if (strategyName === 'Relative Strength Index' || strategyName === 'rsi') {
+      return 'Indeks relativne snage';
+    }
+
+    if (strategyName === 'Bollinger Bands' || strategyName === 'bollinger') {
+      return 'Bollingerove ovojnice';
+    }
+
+    return strategyName;
+  }
+
+  getRankLabel(index: number) {
+    if (index === 0) {
+      return '1';
+    }
+
+    if (index === 1) {
+      return '2';
+    }
+
+    if (index === 2) {
+      return '3';
+    }
+
+    return String(index + 1);
+  }
+
+  getRankClass(index: number) {
+    if (index === 0) {
+      return 'gold';
+    }
+
+    if (index === 1) {
+      return 'silver';
+    }
+
+    if (index === 2) {
+      return 'bronze';
+    }
+
+    return 'default';
+  }
+
+  loadDashboardChart(attempt = 0) {
+    if (!this.isBrowser || this.roiTrendSimulations.length === 0) {
+      if (this.dashboardChart) {
+        this.dashboardChart.destroy();
+        this.dashboardChart = null;
+      }
+
+      return;
+    }
+
+    const canvas = document.getElementById('dashboardRoiChart') as HTMLCanvasElement | null;
+
+    if (!canvas) {
+      if (attempt < 5) {
+        setTimeout(() => {
+          this.loadDashboardChart(attempt + 1);
+        }, 100);
+      }
+
+      return;
+    }
+
+    if (this.dashboardChart) {
+      this.dashboardChart.destroy();
+    }
+
+    this.dashboardChart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: this.roiTrendSimulations.map((simulation) => simulation.created_at),
+        datasets: [
+          {
+            label: 'Povrat (%)',
+            data: this.roiTrendSimulations.map((simulation) => simulation.return_pct),
+            borderColor: '#38bdf8',
+            backgroundColor: 'rgba(56, 189, 248, 0.18)',
+            fill: true,
+            tension: 0.35
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: {
+              color: '#cbd5e1'
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: {
+              color: '#94a3b8',
+              maxRotation: 0,
+              autoSkip: true
+            },
+            grid: {
+              color: '#334155'
+            }
+          },
+          y: {
+            ticks: {
+              color: '#94a3b8'
+            },
+            grid: {
+              color: '#334155'
+            }
+          }
+        }
+      }
     });
   }
 
@@ -274,9 +448,15 @@ setActiveTab(tab: string) {
     const endpoint = this.getStrategyEndpoint();
     const params = this.getStrategyParams();
 
+    if (this.chart) {
+      this.chart.destroy();
+      this.chart = null;
+    }
+
     this.chartDataService
       .getChartData(endpoint, this.symbol, this.interval, params)
-      .subscribe((chartData) => {
+      .subscribe({
+      next: (chartData) => {
         const canvas = document.getElementById('priceChart') as HTMLCanvasElement | null;
 
         if (!canvas) {
@@ -342,7 +522,11 @@ setActiveTab(tab: string) {
             }
           });
         }
-      });
+      },
+      error: (error) => {
+        console.error(error);
+      }
+    });
   }
 
 
@@ -399,7 +583,7 @@ setActiveTab(tab: string) {
     localStorage.removeItem('symbol');
     localStorage.removeItem('strategy');
     localStorage.removeItem('interval');
-    localStorage.setItem('activeTab', 'simulation');
+    localStorage.removeItem('activeTab');
   }
 
   this.activeTab = 'simulation';
@@ -436,8 +620,41 @@ setActiveTab(tab: string) {
 
       this.activeTab = 'results';
       this.cdr.detectChanges();
-      this.loadChart();
+      setTimeout(() => {
+        this.loadChart();
+      });
 
+    });
+}
+
+deleteSimulation(id: number) {
+  const confirmed = confirm('Zelite li obrisati ovu simulaciju iz povijesti?');
+
+  if (!confirmed) {
+    return;
+  }
+
+  this.simulationService
+    .deleteSimulation(id)
+    .subscribe({
+      next: () => {
+        this.simulations = this.simulations.filter(
+          (simulation) => simulation.id !== id
+        );
+        this.loadDashboardStats();
+        this.loadBestBacktest();
+
+        if (this.activeTab === 'dashboard') {
+          this.cdr.detectChanges();
+          setTimeout(() => {
+            this.loadDashboardChart();
+          });
+        }
+      },
+      error: (error) => {
+        console.error(error);
+        alert('Doslo je do greske pri brisanju simulacije.');
+      }
     });
 }
 

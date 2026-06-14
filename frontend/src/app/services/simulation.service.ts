@@ -30,4 +30,10 @@ getSimulationById(id: number) {
     `http://127.0.0.1:5000/api/simulations/${id}`
   );
 }
+
+deleteSimulation(id: number) {
+  return this.http.delete<any>(
+    `http://127.0.0.1:5000/api/simulations/${id}`
+  );
+}
 }

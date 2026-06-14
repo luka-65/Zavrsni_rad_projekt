@@ -1,10 +1,18 @@
 h2 {
   color: #f8fafc;
-  margin-top: 40px;
+  margin: 0;
+}
+
+.history-header {
+  width: min(100%, 1180px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 40px auto 0;
 }
 
 table {
-  width: 900px;
+  width: min(100%, 1180px);
   border-collapse: collapse;
   margin-top: 15px;
   margin-bottom: 30px;
@@ -26,4 +34,49 @@ th {
 
 tr:hover {
   background: #293548;
+}
+
+button {
+  margin-right: 8px;
+}
+
+.export-button {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.export-button:hover {
+  background: #1d4ed8;
+}
+
+.delete-button {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.delete-button:hover {
+  background: #b91c1c;
+}
+
+@media (max-width: 900px) {
+  :host {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .history-header {
+    min-width: 760px;
+  }
+
+  table {
+    min-width: 760px;
+  }
+}
+
+@media (max-width: 560px) {
+  .history-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
 }

@@ -1,5 +1,5 @@
 from flask import Blueprint
-from database.db import (get_all_simulations, get_dashboard_stats, get_best_backtest, get_simulation_by_id)
+from database.db import (get_all_simulations, get_dashboard_stats, get_best_backtest, get_simulation_by_id, delete_simulation)
 
 simulations_bp = Blueprint("simulations", __name__)
 
@@ -46,4 +46,19 @@ def simulation_details(simulation_id):
     return {
         "status": "success",
         "data": data
+    }
+
+@simulations_bp.route("/api/simulations/<int:simulation_id>", methods=["DELETE"])
+def remove_simulation(simulation_id):
+    deleted = delete_simulation(simulation_id)
+
+    if not deleted:
+        return {
+            "status": "error",
+            "message": "Simulation not found"
+        }, 404
+
+    return {
+        "status": "success",
+        "message": "Simulation deleted"
     }

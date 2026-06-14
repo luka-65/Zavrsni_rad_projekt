@@ -8,11 +8,11 @@
 
     <div class="dashboard-card">
       <h3>Najčešća strategija</h3>
-      <p>{{ dashboardStats.most_used_strategy }}</p>
+      <p>{{ formatStrategyName(dashboardStats.most_used_strategy) }}</p>
     </div>
 
     <div class="dashboard-card">
-      <h3>Najbolji ROI</h3>
+      <h3>Najbolji povrat</h3>
       <p [style.color]="dashboardStats.best_roi >= 0 ? '#22c55e' : '#ef4444'">
         {{ dashboardStats.best_roi }}%
       </p>

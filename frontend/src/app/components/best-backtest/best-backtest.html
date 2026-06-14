@@ -3,14 +3,14 @@
 <div class="best-backtest-card">
 
   <div class="header">
-    🏆 Najbolji Backtest
+    🏆 Najbolje testiranje
   </div>
 
   <div class="content">
 
     <div>
       <span>Strategija</span>
-      <h3>{{ bestBacktest.strategy }}</h3>
+      <h3>{{ formatStrategyName(bestBacktest.strategy) }}</h3>
     </div>
 
     <div>
@@ -19,7 +19,7 @@
     </div>
 
     <div>
-      <span>ROI</span>
+      <span>Povrat</span>
       <h2>
         {{ bestBacktest.return_pct }}%
       </h2>

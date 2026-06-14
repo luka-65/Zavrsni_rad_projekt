@@ -9,7 +9,7 @@ h2 {
 
 canvas {
   display: block;
-  width: 1000px !important;
+  width: min(100%, 1000px) !important;
   height: 430px !important;
   margin: 20px auto 40px auto;
   background: #1e293b;
@@ -17,4 +17,21 @@ canvas {
   border-radius: 14px;
   padding: 20px;
   box-shadow: 0 0 20px rgba(0,0,0,0.25);
+}
+
+@media (max-width: 900px) {
+  canvas {
+    height: 320px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  h2 {
+    font-size: 20px;
+  }
+
+  canvas {
+    height: 260px !important;
+    padding: 10px;
+  }
 }

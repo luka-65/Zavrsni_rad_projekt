@@ -2,7 +2,7 @@
   <div class="cards">
     <div class="card">
       <h3>Strategija</h3>
-      <p>{{ result.strategy }}</p>
+      <p>{{ formatStrategyName(result.strategy) }}</p>
     </div>
 
     <div class="card">
@@ -23,12 +23,12 @@
     </div>
 
     <div class="card">
-      <h3>Max Drawdown</h3>
+      <h3>Najveći pad</h3>
       <p>{{ result.result.max_drawdown_pct }}%</p>
     </div>
 
     <div class="card">
-      <h3>Win Rate</h3>
+      <h3>Stopa dobitnih transakcija</h3>
       <p [style.color]="result.result.win_rate_pct >= 50 ? '#22c55e' : '#f59e0b'">
         {{ result.result.win_rate_pct }}%
       </p>

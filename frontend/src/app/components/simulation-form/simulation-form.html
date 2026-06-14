@@ -27,9 +27,9 @@
     [ngModel]="strategy"
     (ngModelChange)="strategyChange.emit($event)"
   >
-    <option value="moving-average">Moving Average</option>
-    <option value="rsi">RSI</option>
-    <option value="bollinger">Bollinger Bands</option>
+    <option value="moving-average">Križanje pomičnih prosjeka</option>
+    <option value="rsi">Indeks relativne snage</option>
+    <option value="bollinger">Bollingerove ovojnice</option>
   </select>
 
   <label>Interval</label>
@@ -61,21 +61,21 @@
   }
 
   @if (strategy === 'rsi') {
-    <label>RSI period</label>
+    <label>Razdoblje indeksa relativne snage</label>
     <input
       type="number"
       [ngModel]="rsiPeriod"
       (ngModelChange)="rsiPeriodChange.emit($event)"
     >
 
-    <label>Oversold granica</label>
+    <label>Granica preprodanosti</label>
     <input
       type="number"
       [ngModel]="oversold"
       (ngModelChange)="oversoldChange.emit($event)"
     >
 
-    <label>Overbought granica</label>
+    <label>Granica prekupljenosti</label>
     <input
       type="number"
       [ngModel]="overbought"
@@ -84,7 +84,7 @@
   }
 
   @if (strategy === 'bollinger') {
-    <label>Bollinger period</label>
+    <label>Razdoblje Bollingerovih ovojnica</label>
     <input
       type="number"
       [ngModel]="bollingerWindow"

@@ -8,4 +8,16 @@ import { Component, Input } from '@angular/core';
 })
 export class TradeHistoryComponent {
   @Input() result: any = null;
+
+  formatTradeType(type: string) {
+    if (type === 'BUY' || type === 'buy') {
+      return 'Kupnja';
+    }
+
+    if (type === 'SELL' || type === 'sell') {
+      return 'Prodaja';
+    }
+
+    return type;
+  }
 }

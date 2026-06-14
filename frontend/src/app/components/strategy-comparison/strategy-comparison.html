@@ -5,10 +5,10 @@
     <thead>
       <tr>
         <th>Strategija</th>
-        <th>ROI</th>
+        <th>Povrat</th>
         <th>Završni kapital</th>
-        <th>Max Drawdown</th>
-        <th>Win Rate</th>
+        <th>Najveći pad</th>
+        <th>Stopa dobitnih transakcija</th>
         <th>Broj transakcija</th>
       </tr>
     </thead>
@@ -16,7 +16,7 @@
     <tbody>
       @for (item of compareResults; track item.strategy) {
         <tr>
-          <td>{{ item.strategy }}</td>
+          <td>{{ formatStrategyName(item.strategy) }}</td>
           <td [style.color]="item.return_pct >= 0 ? '#22c55e' : '#ef4444'">
             {{ item.return_pct }}%
           </td>
@@ -29,16 +29,16 @@
     </tbody>
   </table>
 
-  <h2>Grafička usporedba ROI-a</h2>
+  <h2>Grafička usporedba povrata</h2>
   <canvas id="compareChart"></canvas>
 }
 
 @if (bestStrategy) {
   <div class="best-card">
     <h2>🏆 Najbolja strategija</h2>
-    <p>{{ bestStrategy.strategy }}</p>
+    <p>{{ formatStrategyName(bestStrategy.strategy) }}</p>
     <span [style.color]="bestStrategy.return_pct >= 0 ? '#22c55e' : '#ef4444'">
-      ROI: {{ bestStrategy.return_pct }}%
+      Povrat: {{ bestStrategy.return_pct }}%
     </span>
   </div>
 }

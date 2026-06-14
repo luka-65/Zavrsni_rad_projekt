@@ -1,7 +1,9 @@
 .best-backtest-card {
-  margin-bottom: 30px;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto 30px;
   padding: 25px;
-  border-radius: 16px;
+  border-radius: 8px;
 
   background: linear-gradient(
     135deg,
@@ -46,4 +48,19 @@
 .content h4 {
   color: white;
   margin: 5px 0;
+}
+
+@media (max-width: 760px) {
+  .best-backtest-card {
+    padding: 20px;
+  }
+
+  .header {
+    font-size: 21px;
+  }
+
+  .content {
+    display: grid;
+    gap: 18px;
+  }
 }

@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Chart } from 'chart.js/auto';
+import { Component, OnInit, ChangeDetectorRef, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 import { BacktestService } from './services/backtest.service';
 import { ChartDataService } from './services/chart.service';
@@ -15,6 +16,7 @@ import { SimulationHistoryComponent } from './components/simulation-history/simu
 import { SimulationFormComponent } from './components/simulation-form/simulation-form';
 import { DashboardStatsComponent } from './components/dashboard-stats/dashboard-stats';
 import { BestBacktestComponent } from './components/best-backtest/best-backtest';
+import { finalize } from 'rxjs';
 
 
 @Component({
@@ -48,6 +50,8 @@ export class App implements OnInit {
   initialBalance = 10000;
 
   activeTab = 'simulation';
+  isLoading = false;
+  isBrowser = false;
 
   shortWindow = 20;
   longWindow = 50;
@@ -60,18 +64,59 @@ export class App implements OnInit {
   numStd = 2;
 
   constructor(
-    private backtestService: BacktestService,
-    private chartDataService: ChartDataService,
-    private simulationService: SimulationService,
-    private symbolService: SymbolService,
-    private pdfService: PdfService
-  ) {}
+  private backtestService: BacktestService,
+  private chartDataService: ChartDataService,
+  private simulationService: SimulationService,
+  private symbolService: SymbolService,
+  private pdfService: PdfService,
+  private cdr: ChangeDetectorRef,
+  @Inject(PLATFORM_ID) private platformId: Object
+) {
+  this.isBrowser = isPlatformBrowser(this.platformId);
+}
 
   ngOnInit() {
-    this.loadSimulations();
-    this.loadDashboardStats();
-    this.loadBestBacktest();
+  this.loadSimulations();
+  this.loadDashboardStats();
+  this.loadBestBacktest();
+
+  if (this.isBrowser) {
+    const savedResult = localStorage.getItem('lastResult');
+    const savedTab = localStorage.getItem('activeTab');
+    const savedSymbol = localStorage.getItem('symbol');
+    const savedStrategy = localStorage.getItem('strategy');
+    const savedInterval = localStorage.getItem('interval');
+
+    if (savedResult) {
+      this.result = JSON.parse(savedResult);
+    }
+
+    if (savedTab) {
+      this.activeTab = savedTab;
+    }
+
+    if (savedSymbol) {
+      this.symbol = savedSymbol;
+      this.symbolSearch = savedSymbol;
+    }
+
+    if (savedStrategy) {
+      this.strategy = savedStrategy;
+    }
+
+    if (savedInterval) {
+      this.interval = savedInterval;
+    }
   }
+}
+
+setActiveTab(tab: string) {
+  this.activeTab = tab;
+
+  if (this.isBrowser) {
+    localStorage.setItem('activeTab', tab);
+  }
+}
 
   getStrategyEndpoint() {
     if (this.strategy === 'rsi') {
@@ -102,44 +147,75 @@ export class App implements OnInit {
   }
 
   runBacktest() {
-    const endpoint = this.getStrategyEndpoint();
-    const params = this.getStrategyParams();
+  if (this.isLoading) {
+    return;
+  }
 
-    this.backtestService
-      .runBacktest(
-        endpoint,
-        this.symbol,
-        this.interval,
-        this.initialBalance,
-        params
-      )
-      .subscribe((data) => {
+  this.isLoading = true;
+
+  const endpoint = this.getStrategyEndpoint();
+  const params = this.getStrategyParams();
+
+  this.backtestService
+    .runBacktest(
+      endpoint,
+      this.symbol,
+      this.interval,
+      this.initialBalance,
+      params
+    )
+    .pipe(
+      finalize(() => {
+        this.isLoading = false;
+      })
+    )
+    .subscribe({
+      next: (data) => {
         this.result = data;
         this.activeTab = 'results';
+
+        if (this.isBrowser) {
+          localStorage.setItem('lastResult', JSON.stringify(this.result));
+          localStorage.setItem('activeTab', this.activeTab);
+          localStorage.setItem('symbol', this.symbol);
+          localStorage.setItem('strategy', this.strategy);
+          localStorage.setItem('interval', this.interval);
+        }
+
         this.loadSimulations();
         this.loadDashboardStats();
         this.loadBestBacktest();
+        this.cdr.detectChanges();
 
-        setTimeout(() => {
-          this.loadChart();
-        }, 300);
-      });
-  }
+        this.loadChart();
+      },
+      error: (error) => {
+        console.error(error);
+        alert('Došlo je do greške pri pokretanju simulacije.');
+      }
+    });
+}
+
+
 
   compareStrategies() {
+      if (!this.result) {
+    alert('Prvo pokreni simulaciju.');
+    return;
+  }
     this.backtestService
       .compareStrategies(this.symbol, this.interval, this.initialBalance)
       .subscribe((response) => {
         this.compareResults = response.results;
         this.activeTab = 'compare';
+        this.cdr.detectChanges();
+        this.loadCompareChart();
 
         this.bestStrategy = this.compareResults.reduce((best, current) =>
           current.return_pct > best.return_pct ? current : best
         );
 
-        setTimeout(() => {
-          this.loadCompareChart();
-        }, 1000);
+       
       });
   }
 
@@ -147,7 +223,8 @@ export class App implements OnInit {
     const canvas = document.getElementById('compareChart') as HTMLCanvasElement | null;
 
     if (!canvas) {
-      return;
+        console.warn('compareChart canvas nije pronađen');
+        return;
     }
 
     if (this.compareChart) {
@@ -191,6 +268,9 @@ export class App implements OnInit {
   }
 
   loadChart() {
+    if (!this.result) {
+  return;
+}
     const endpoint = this.getStrategyEndpoint();
     const params = this.getStrategyParams();
 
@@ -203,8 +283,9 @@ export class App implements OnInit {
           return;
         }
 
-        if (this.chart) {
-          this.chart.destroy();
+        if (!canvas) {
+          console.warn('priceChart canvas nije pronađen');
+          return;
         }
 
         if (this.strategy === 'moving-average') {
@@ -280,6 +361,50 @@ export class App implements OnInit {
     });
   }
 
+  newSimulation() {
+  this.result = null;
+  this.compareResults = [];
+  this.bestStrategy = null;
+
+  this.symbolSearch = '';
+  this.symbolResults = [];
+
+  this.symbol = 'BTCUSDT';
+  this.strategy = 'moving-average';
+  this.interval = '1d';
+  this.initialBalance = 10000;
+
+  this.shortWindow = 20;
+  this.longWindow = 50;
+
+  this.rsiPeriod = 14;
+  this.oversold = 30;
+  this.overbought = 70;
+
+  this.bollingerWindow = 20;
+  this.numStd = 2;
+
+  if (this.chart) {
+    this.chart.destroy();
+    this.chart = null;
+  }
+
+  if (this.compareChart) {
+    this.compareChart.destroy();
+    this.compareChart = null;
+  }
+
+  if (this.isBrowser) {
+    localStorage.removeItem('lastResult');
+    localStorage.removeItem('symbol');
+    localStorage.removeItem('strategy');
+    localStorage.removeItem('interval');
+    localStorage.setItem('activeTab', 'simulation');
+  }
+
+  this.activeTab = 'simulation';
+}
+
   selectSymbol(symbol: string) {
     this.symbol = symbol;
     this.symbolSearch = symbol;
@@ -310,10 +435,9 @@ export class App implements OnInit {
       this.strategy = this.mapStrategyToFrontend(simulation.strategy);
 
       this.activeTab = 'results';
+      this.cdr.detectChanges();
+      this.loadChart();
 
-      setTimeout(() => {
-        this.loadChart();
-      }, 600);
     });
 }
 

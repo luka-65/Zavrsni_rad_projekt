@@ -106,16 +106,24 @@
     (ngModelChange)="initialBalanceChange.emit($event)"
   >
 
-  <button (click)="runBacktestEvent.emit()">
+  <button
+  type="button"
+  [disabled]="isLoading"
+  (click)="runBacktestEvent.emit()"
+>
+  @if (isLoading) {
+    Simulacija u tijeku...
+  } @else {
     Pokreni simulaciju
-  </button>
+  }
+</button>
 
-  <button (click)="compareStrategiesEvent.emit()">
+  <button type="button" (click)="compareStrategiesEvent.emit()">
     Usporedi strategije
   </button>
 
   @if (hasResult) {
-    <button (click)="downloadPdfEvent.emit()">
+    <button type="button" (click)="downloadPdfEvent.emit()">
       Preuzmi PDF izvještaj
     </button>
   }

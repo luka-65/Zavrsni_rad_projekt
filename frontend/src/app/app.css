@@ -6,9 +6,9 @@
 }
 
 .tabs button {
-  background: #1e293b;
-  color: #cbd5e1;
-  border: 1px solid #334155;
+  background: #e2e8f0;
+  color: #1e293b;
+  border: 1px solid #cbd5e1;
   border-radius: 10px;
   padding: 12px 20px;
   cursor: pointer;
@@ -16,7 +16,7 @@
 }
 
 .tabs button:hover {
-  background: #334155;
+  background: #cbd5e1;
 }
 
 .tabs button.active {
@@ -78,8 +78,28 @@ app-best-backtest {
 
 h1 {
   text-align: center;
+  font-size: 42px;
+  font-weight: bold;
+  margin-bottom: 30px;
+  color: #0ea5e9;
 }
 
 .empty-message {
   text-align: center;
+}
+
+.new-button {
+  display: block;
+  margin: 0 auto 30px auto;
+  background: #cbd5e1;
+  color: #1e293b;
+  border: 1px solid #94a3b8;
+  border-radius: 10px;
+  padding: 12px 20px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.new-button:hover {
+  background: #94a3b8;
 }

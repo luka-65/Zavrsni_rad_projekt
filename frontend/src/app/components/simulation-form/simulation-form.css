@@ -52,6 +52,11 @@ button:hover {
   align-items: center;
 }
 
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .symbol-item strong {
   color: #f8fafc;
 }

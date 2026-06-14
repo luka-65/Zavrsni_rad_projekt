@@ -15,6 +15,8 @@ export class SimulationFormComponent {
   @Input() interval = '1d';
   @Input() initialBalance = 10000;
 
+  @Input() isLoading = false;
+
   @Input() shortWindow = 20;
   @Input() longWindow = 50;
 

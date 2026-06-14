@@ -2,81 +2,91 @@
   <h1>Crypto Trading Simulator</h1>
 
   <div class="tabs">
-    <button
-      [class.active]="activeTab === 'simulation'"
-      (click)="activeTab = 'simulation'"
-    >
-      Simulacija
-    </button>
+  <button
+    [class.active]="activeTab === 'simulation'"
+    (click)="setActiveTab('simulation')"
+  >
+    Simulacija
+  </button>
 
-    <button
-      [class.active]="activeTab === 'results'"
-      (click)="activeTab = 'results'"
-      [disabled]="!result"
-    >
-      Rezultati
-    </button>
+  <button
+    [class.active]="activeTab === 'results'"
+    (click)="setActiveTab('results')"
+    [disabled]="!result"
+  >
+    Rezultati
+  </button>
 
-    <button
-      [class.active]="activeTab === 'compare'"
-      (click)="activeTab = 'compare'"
-    >
-      Usporedba strategija
-    </button>
+  <button
+  [class.active]="activeTab === 'compare'"
+  (click)="setActiveTab('compare')"
+  [disabled]="!result"
+>
+  Usporedba strategija
+</button>
 
-    <button
-      [class.active]="activeTab === 'history'"
-      (click)="activeTab = 'history'"
-    >
-      Povijest i statistika
-    </button>
-  </div>
+  <button
+    [class.active]="activeTab === 'history'"
+    (click)="setActiveTab('history')"
+  >
+    Povijest i statistika
+  </button>
+</div>
+
+<button
+  class="new-button"
+  type="button"
+  (click)="newSimulation()"
+>
+  Nova simulacija
+</button>
 
   @if (activeTab === 'simulation') {
     <app-simulation-form
-      [symbolSearch]="symbolSearch"
-      (symbolSearchChange)="symbolSearch = $event"
+  [symbolSearch]="symbolSearch"
+  (symbolSearchChange)="symbolSearch = $event"
 
-      [symbolResults]="symbolResults"
+  [symbolResults]="symbolResults"
 
-      [strategy]="strategy"
-      (strategyChange)="strategy = $event"
+  [strategy]="strategy"
+  (strategyChange)="strategy = $event"
 
-      [interval]="interval"
-      (intervalChange)="interval = $event"
+  [interval]="interval"
+  (intervalChange)="interval = $event"
 
-      [initialBalance]="initialBalance"
-      (initialBalanceChange)="initialBalance = $event"
+  [initialBalance]="initialBalance"
+  (initialBalanceChange)="initialBalance = $event"
 
-      [shortWindow]="shortWindow"
-      (shortWindowChange)="shortWindow = $event"
+  [shortWindow]="shortWindow"
+  (shortWindowChange)="shortWindow = $event"
 
-      [longWindow]="longWindow"
-      (longWindowChange)="longWindow = $event"
+  [longWindow]="longWindow"
+  (longWindowChange)="longWindow = $event"
 
-      [rsiPeriod]="rsiPeriod"
-      (rsiPeriodChange)="rsiPeriod = $event"
+  [rsiPeriod]="rsiPeriod"
+  (rsiPeriodChange)="rsiPeriod = $event"
 
-      [oversold]="oversold"
-      (oversoldChange)="oversold = $event"
+  [oversold]="oversold"
+  (oversoldChange)="oversold = $event"
 
-      [overbought]="overbought"
-      (overboughtChange)="overbought = $event"
+  [overbought]="overbought"
+  (overboughtChange)="overbought = $event"
 
-      [bollingerWindow]="bollingerWindow"
-      (bollingerWindowChange)="bollingerWindow = $event"
+  [bollingerWindow]="bollingerWindow"
+  (bollingerWindowChange)="bollingerWindow = $event"
 
-      [numStd]="numStd"
-      (numStdChange)="numStd = $event"
+  [numStd]="numStd"
+  (numStdChange)="numStd = $event"
 
-      [hasResult]="result !== null"
+  [hasResult]="result !== null"
+  [isLoading]="isLoading"
 
-      (searchSymbolsEvent)="searchSymbols()"
-      (selectSymbolEvent)="selectSymbol($event)"
-      (runBacktestEvent)="runBacktest()"
-      (compareStrategiesEvent)="compareStrategies()"
-      (downloadPdfEvent)="downloadPdf()">
-    </app-simulation-form>
+  (searchSymbolsEvent)="searchSymbols()"
+  (selectSymbolEvent)="selectSymbol($event)"
+  (runBacktestEvent)="runBacktest()"
+  (compareStrategiesEvent)="compareStrategies()"
+  (downloadPdfEvent)="downloadPdf()">
+</app-simulation-form>
   }
 
   @if (activeTab === 'results') {
@@ -100,8 +110,9 @@
     }
   }
 
-  @if (activeTab === 'compare') {
-    <button class="action-button" (click)="compareStrategies()">
+ @if (activeTab === 'compare') {
+  @if (result) {
+    <button class="action-button" type="button" (click)="compareStrategies()">
       Pokreni usporedbu strategija
     </button>
 
@@ -109,7 +120,12 @@
       [compareResults]="compareResults"
       [bestStrategy]="bestStrategy">
     </app-strategy-comparison>
+  } @else {
+    <p class="empty-message">
+      Prvo pokreni simulaciju kako bi mogao usporediti strategije.
+    </p>
   }
+}
 
   @if (activeTab === 'history') {
     <app-dashboard-stats

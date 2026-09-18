@@ -5,6 +5,7 @@
     <thead>
       <tr>
         <th>Tip</th>
+        <th>Vrijeme (UTC)</th>
         <th>Cijena</th>
         <th>Dobit %</th>
       </tr>
@@ -22,6 +23,7 @@
               {{ formatTradeType(trade) }}
             </span>
           </td>
+          <td>{{ trade.timestamp != null ? (trade.timestamp | date:'dd.MM.yyyy. HH:mm':'UTC') : '-' }}</td>
           <td>{{ trade.price }}</td>
           <td>{{ trade.profit_pct ?? '-' }}</td>
         </tr>

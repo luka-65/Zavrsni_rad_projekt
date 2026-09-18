@@ -1,23 +1,44 @@
-@if (
-  (
-    strategy === 'moving-average' ||
-    strategy === 'rsi' ||
-    strategy === 'bollinger'
-  ) && result
-) {
-  <h2>
-    @if (strategy === 'moving-average') {
-      Graf cijene i pomičnih prosjeka
+<section aria-label="Graf simulacije">
+  <div class="chart-header">
+    <h2>Cijena i transakcije: {{ result?.symbol }}</h2>
+    <div class="chart-tools" role="group" aria-label="Prikaz grafa">
+      <button type="button" title="Približi" aria-label="Približi" [disabled]="!ready()" (click)="zoom(1.5)"><lucide-icon [img]="icons.ZoomIn" [size]="20" /></button>
+      <button type="button" title="Udalji" aria-label="Udalji" [disabled]="!ready()" (click)="zoom(0.67)"><lucide-icon [img]="icons.ZoomOut" [size]="20" /></button>
+      <button type="button" title="Cijelo razdoblje" aria-label="Cijelo razdoblje" [disabled]="!ready()" (click)="reset()"><lucide-icon [img]="icons.RotateCcw" [size]="20" /></button>
+    </div>
+  </div>
+  @if (legacy()) {
+    <p class="notice">Starija simulacija nema spremljen izvorni graf ni vrijeme transakcija. Prikazane cijene i pokazatelji ponovno su dohvaćeni uz dostupne parametre; oznake transakcija nisu dostupne.</p>
+  }
+  <div class="chart-shell" [attr.aria-busy]="loading()">
+    <canvas #canvas aria-label="Cijena kroz vrijeme s oznakama kupnje i prodaje" role="img" [style.visibility]="ready() ? 'visible' : 'hidden'"></canvas>
+    @if (loading()) { <p class="chart-status" role="status">Učitavanje grafa...</p> }
+    @if (error()) {
+      <div class="chart-status" role="alert"><p>{{ error() }}</p><button type="button" (click)="load()">Pokušaj ponovno</button></div>
     }
-
-    @if (strategy === 'rsi') {
-      Indeks relativne snage
+  </div>
+  <p class="visible-range">{{ visibleRange() }}</p>
+  @if (timedTrades.length > 0) {
+    <div class="trade-controls">
+      <label for="chart-trade">Transakcija</label>
+      <select id="chart-trade" [value]="selectedIndex()" (change)="selectTrade(+$any($event.target).value)">
+        <option value="-1">Odaberi transakciju</option>
+        @for (item of timedTrades; track item.index) {
+          <option [value]="item.index">{{ item.index + 1 }}. {{ tradeLabel(item.trade) }} | {{ formatTime(item.trade.timestamp) }}</option>
+        }
+      </select>
+      <button type="button" title="Prethodna transakcija" aria-label="Prethodna transakcija" (click)="stepTrade(-1)"><lucide-icon [img]="icons.ChevronLeft" [size]="20" /></button>
+      <button type="button" title="Sljedeća transakcija" aria-label="Sljedeća transakcija" (click)="stepTrade(1)"><lucide-icon [img]="icons.ChevronRight" [size]="20" /></button>
+    </div>
+    @if (selectedTrade; as trade) {
+      <dl class="trade-detail" aria-live="polite">
+        <div><dt>Tip</dt><dd [class.buy]="trade.type === 'BUY'" [class.sell]="trade.type === 'SELL'">{{ tradeLabel(trade) }}</dd></div>
+        <div><dt>Vrijeme (UTC)</dt><dd>{{ formatTime(trade.timestamp) }}</dd></div>
+        <div><dt>Cijena</dt><dd>{{ formatPrice(trade.price) }} USDT</dd></div>
+        <div><dt>Dobit</dt><dd>{{ trade.profit_pct == null ? '-' : trade.profit_pct + '%' }}</dd></div>
+      </dl>
     }
-
-    @if (strategy === 'bollinger') {
-      Bollingerove ovojnice
-    }
-  </h2>
-
-  <canvas id="priceChart"></canvas>
-}
+  } @else if (ready() && !legacy()) {
+    <p>U ovom razdoblju nema izvršenih transakcija.</p>
+  }
+</section>

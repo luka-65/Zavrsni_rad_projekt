@@ -113,7 +113,9 @@ def get_all_simulations():
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT *
+        SELECT id, strategy, symbol, interval, initial_balance, final_balance,
+               return_pct, max_drawdown_pct, win_rate_pct, number_of_trades,
+               start_date, end_date, created_at
         FROM simulations
         ORDER BY created_at DESC
     """)

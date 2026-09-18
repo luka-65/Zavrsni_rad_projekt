@@ -1,8 +1,9 @@
 import { Component, Input } from '@angular/core';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-trade-history',
-  imports: [],
+  imports: [DatePipe],
   templateUrl: './trade-history.html',
   styleUrl: './trade-history.css'
 })

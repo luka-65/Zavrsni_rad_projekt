@@ -4,4 +4,10 @@ body {
   margin: 0;
   padding: 0;
   background: #0f172a;
+  color: #f8fafc;
+  color-scheme: dark;
 }
+
+*, *::before, *::after { box-sizing: border-box; }
+
+button, input, select, textarea { font: inherit; }

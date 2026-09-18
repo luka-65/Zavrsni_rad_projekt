@@ -14,12 +14,12 @@ def rsi_strategy(df, period=14, oversold=30, overbought=70):
 
     df["RSI"] = 100 - (100 / (1 + rs))
 
-    df["signal"] = 0
+    df["signal"] = float("nan")
 
     df.loc[df["RSI"] < oversold, "signal"] = 1
     df.loc[df["RSI"] > overbought, "signal"] = 0
 
-    df["signal"] = df["signal"].replace(0, None).ffill().fillna(0)
+    df["signal"] = df["signal"].ffill().fillna(0)
     df["position"] = df["signal"].diff()
 
     return df

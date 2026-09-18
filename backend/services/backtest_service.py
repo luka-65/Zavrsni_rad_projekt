@@ -3,6 +3,7 @@ from strategies.moving_average import moving_average_strategy
 from strategies.rsi import rsi_strategy
 from strategies.bollinger import bollinger_bands_strategy
 from backtesting.backtester import run_backtest
+from services.chart_data import build_chart_data
 
 
 def run_moving_average(
@@ -17,7 +18,9 @@ def run_moving_average(
 ):
     df = get_dataframe(symbol, interval, limit, True, start_date, end_date)
     df = moving_average_strategy(df, short_window, long_window)
-    return run_backtest(df, initial_balance)
+    result = run_backtest(df, initial_balance)
+    result["chart_data"] = build_chart_data(df)
+    return result
 
 
 def run_rsi(
@@ -33,7 +36,11 @@ def run_rsi(
 ):
     df = get_dataframe(symbol, interval, limit, True, start_date, end_date)
     df = rsi_strategy(df, period, oversold, overbought)
-    return run_backtest(df, initial_balance)
+    result = run_backtest(df, initial_balance)
+    result["chart_data"] = build_chart_data(df)
+    result["chart_data"]["oversold"] = [oversold] * len(df)
+    result["chart_data"]["overbought"] = [overbought] * len(df)
+    return result
 
 
 def run_bollinger(
@@ -48,7 +55,9 @@ def run_bollinger(
 ):
     df = get_dataframe(symbol, interval, limit, True, start_date, end_date)
     df = bollinger_bands_strategy(df, window, num_std)
-    return run_backtest(df, initial_balance)
+    result = run_backtest(df, initial_balance)
+    result["chart_data"] = build_chart_data(df)
+    return result
 
 
 def format_compare_result(strategy, result):

@@ -7,9 +7,14 @@ def run_backtest(df, initial_balance=10000):
     trades = []
     equity_curve = []
 
-    for _, row in df.iterrows():
+    for candle_index, (_, row) in enumerate(df.iterrows()):
 
         current_price = row["close"]
+        timestamp = row.get("close_time", row.get("open_time"))
+        trade_time = {
+            "candle_index": candle_index,
+            "timestamp": int(timestamp) if timestamp is not None else None,
+        }
 
         if row["position"] == 1 and position == 0:
             buy_price = current_price
@@ -17,8 +22,9 @@ def run_backtest(df, initial_balance=10000):
             balance = 0
 
             trades.append({
+                **trade_time,
                 "type": "BUY",
-                "price": round(buy_price, 2),
+                "price": float(buy_price),
                 "profit_pct": None,
                 "is_final_close": False
             })
@@ -31,8 +37,9 @@ def run_backtest(df, initial_balance=10000):
             profit_pct = ((sell_price - buy_price) / buy_price) * 100
 
             trades.append({
+                **trade_time,
                 "type": "SELL",
-                "price": round(sell_price, 2),
+                "price": float(sell_price),
                 "profit_pct": round(profit_pct, 2),
                 "is_final_close": False
             })
@@ -52,8 +59,9 @@ def run_backtest(df, initial_balance=10000):
         profit_pct = ((final_price - buy_price) / buy_price) * 100
 
         trades.append({
+            **trade_time,
             "type": "SELL",
-            "price": round(final_price, 2),
+            "price": float(final_price),
             "profit_pct": round(profit_pct, 2),
             "is_final_close": True
         })

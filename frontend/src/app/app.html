@@ -218,12 +218,12 @@
 
       <app-result-cards [result]="result"></app-result-cards>
 
-      <app-trade-history [result]="result"></app-trade-history>
-
       <app-strategy-chart
         [strategy]="strategy"
         [result]="result">
       </app-strategy-chart>
+
+      <app-trade-history [result]="result"></app-trade-history>
     } @else {
       <p class="empty-message">
         Još nije pokrenuta nijedna simulacija.

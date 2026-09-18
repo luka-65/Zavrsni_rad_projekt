@@ -4,7 +4,6 @@ import { Component, OnInit, ChangeDetectorRef, Inject, PLATFORM_ID } from '@angu
 import { isPlatformBrowser } from '@angular/common';
 
 import { BacktestService } from './services/backtest.service';
-import { ChartDataService } from './services/chart.service';
 import { SimulationService } from './services/simulation.service';
 import { SymbolService } from './services/symbol.service';
 import { PdfService } from './services/pdf.service';
@@ -32,7 +31,6 @@ BestBacktestComponent],
 })
 export class App implements OnInit {
   result: any = null;
-  chart: any = null;
   dashboardChart: any = null;
   simulations: any[] = [];
 
@@ -68,7 +66,6 @@ export class App implements OnInit {
 
   constructor(
   private backtestService: BacktestService,
-  private chartDataService: ChartDataService,
   private simulationService: SimulationService,
   private symbolService: SymbolService,
   private pdfService: PdfService,
@@ -76,6 +73,8 @@ export class App implements OnInit {
   @Inject(PLATFORM_ID) private platformId: Object
 ) {
   this.isBrowser = isPlatformBrowser(this.platformId);
+  Chart.defaults.color = '#f8fafc';
+  Chart.defaults.borderColor = '#475569';
 }
 
   ngOnInit() {
@@ -111,11 +110,6 @@ setActiveTab(tab: string) {
     });
   }
 
-  if (tab === 'results' && this.result) {
-    setTimeout(() => {
-      this.loadChart();
-    });
-  }
 
   if (tab === 'compare' && this.compareResults.length > 0) {
     setTimeout(() => {
@@ -206,9 +200,6 @@ setActiveTab(tab: string) {
         this.loadBestBacktest();
         this.cdr.detectChanges();
 
-        setTimeout(() => {
-          this.loadChart();
-        });
       },
       error: (error) => {
         console.error(error);
@@ -265,9 +256,39 @@ setActiveTab(tab: string) {
         datasets: [
           {
             label: 'Povrat (%)',
-            data: this.compareResults.map((item) => item.return_pct)
+            data: this.compareResults.map((item) => item.return_pct),
+            backgroundColor: '#38bdf8',
+            borderColor: '#bae6fd',
+            borderWidth: 1,
+            hoverBackgroundColor: '#7dd3fc'
           }
         ]
+      },
+      options: {
+        color: '#f8fafc',
+        plugins: {
+          legend: { labels: { color: '#f8fafc' } },
+          tooltip: {
+            backgroundColor: '#111827',
+            titleColor: '#ffffff',
+            bodyColor: '#ffffff',
+            borderColor: '#64748b',
+            borderWidth: 1
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: '#f8fafc' },
+            grid: { color: '#475569' },
+            border: { color: '#94a3b8' }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { color: '#f8fafc' },
+            grid: { color: '#475569' },
+            border: { color: '#94a3b8' }
+          }
+        }
       }
     });
   }
@@ -277,6 +298,7 @@ setActiveTab(tab: string) {
     .getBestBacktest()
     .subscribe((response) => {
       this.bestBacktest = response.data;
+      this.cdr.markForCheck();
     });
 }
 
@@ -285,6 +307,7 @@ setActiveTab(tab: string) {
     .getDashboardStats()
     .subscribe((response) => {
       this.dashboardStats = response.data;
+      this.cdr.markForCheck();
     });
 }
 
@@ -471,95 +494,6 @@ setActiveTab(tab: string) {
     });
   }
 
-  loadChart() {
-    if (!this.result) {
-  return;
-}
-    const endpoint = this.getStrategyEndpoint();
-    const params = this.getStrategyParams();
-
-    if (this.chart) {
-      this.chart.destroy();
-      this.chart = null;
-    }
-
-    this.chartDataService
-      .getChartData(endpoint, this.symbol, this.interval, params)
-      .subscribe({
-      next: (chartData) => {
-        const canvas = document.getElementById('priceChart') as HTMLCanvasElement | null;
-
-        if (!canvas) {
-          return;
-        }
-
-        if (!canvas) {
-          console.warn('priceChart canvas nije pronađen');
-          return;
-        }
-
-        if (this.strategy === 'moving-average') {
-          this.chart = new Chart(canvas, {
-            type: 'line',
-            data: {
-              labels: chartData.prices.map((_: any, i: number) => i + 1),
-              datasets: [
-                { label: 'Cijena', data: chartData.prices },
-                { label: 'MA Short', data: chartData.ma_short },
-                { label: 'MA Long', data: chartData.ma_long }
-              ]
-             },
-            options: {
-              responsive: false,
-              maintainAspectRatio: false
-            }
-          });
-        }
-
-        if (this.strategy === 'rsi') {
-          this.chart = new Chart(canvas, {
-            type: 'line',
-            data: {
-              labels: chartData.rsi.map((_: any, i: number) => i + 1),
-              datasets: [
-                { label: 'RSI', data: chartData.rsi },
-                { label: 'Oversold', data: chartData.oversold },
-                { label: 'Overbought', data: chartData.overbought }
-              ]
-             },
-            options: {
-              responsive: false,
-              maintainAspectRatio: false
-            }
-          });
-        }
-
-        if (this.strategy === 'bollinger') {
-          this.chart = new Chart(canvas, {
-            type: 'line',
-            data: {
-              labels: chartData.prices.map((_: any, i: number) => i + 1),
-              datasets: [
-                { label: 'Cijena', data: chartData.prices },
-                { label: 'Upper Band', data: chartData.upper_band },
-                { label: 'Middle Band', data: chartData.middle_band },
-                { label: 'Lower Band', data: chartData.lower_band }
-              ]
-             },
-            options: {
-              responsive: false,
-              maintainAspectRatio: false
-            }
-          });
-        }
-      },
-      error: (error) => {
-        console.error(error);
-      }
-    });
-  }
-
-
   downloadPdf() {
     this.pdfService.downloadSimulationPdf(this.result, this.strategy);
   }
@@ -671,10 +605,6 @@ setActiveTab(tab: string) {
   this.bollingerWindow = 20;
   this.numStd = 2;
 
-  if (this.chart) {
-    this.chart.destroy();
-    this.chart = null;
-  }
 
   if (this.compareChart) {
     this.compareChart.destroy();
@@ -727,9 +657,6 @@ setActiveTab(tab: string) {
 
       this.activeTab = 'results';
       this.cdr.detectChanges();
-      setTimeout(() => {
-        this.loadChart();
-      });
 
     });
 }

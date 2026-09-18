@@ -2,6 +2,7 @@ from services.binance_service import get_dataframe
 from strategies.moving_average import moving_average_strategy
 from strategies.rsi import rsi_strategy
 from strategies.bollinger import bollinger_bands_strategy
+from services.chart_data import build_chart_data
 
 
 def get_moving_average_chart(
@@ -26,10 +27,8 @@ def get_moving_average_chart(
             sell_signals.append({"price": row["close"]})
 
     return {
+        **build_chart_data(df),
         "symbol": symbol,
-        "prices": df["close"].tolist(),
-        "ma_short": df["MA_SHORT"].fillna(0).tolist(),
-        "ma_long": df["MA_LONG"].fillna(0).tolist(),
         "buy_signals": buy_signals,
         "sell_signals": sell_signals
     }
@@ -49,9 +48,8 @@ def get_rsi_chart(
     df = rsi_strategy(df, period, oversold, overbought)
 
     return {
+        **build_chart_data(df),
         "symbol": symbol,
-        "prices": df["close"].tolist(),
-        "rsi": df["RSI"].fillna(0).tolist(),
         "oversold": [oversold] * len(df),
         "overbought": [overbought] * len(df)
     }
@@ -70,9 +68,6 @@ def get_bollinger_chart(
     df = bollinger_bands_strategy(df, window, num_std)
 
     return {
+        **build_chart_data(df),
         "symbol": symbol,
-        "prices": df["close"].tolist(),
-        "upper_band": df["UPPER_BAND"].fillna(0).tolist(),
-        "middle_band": df["MA"].fillna(0).tolist(),
-        "lower_band": df["LOWER_BAND"].fillna(0).tolist()
     }

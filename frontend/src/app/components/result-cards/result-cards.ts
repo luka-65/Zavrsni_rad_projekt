@@ -1,4 +1,7 @@
 import { Component, Input } from '@angular/core';
+import { MISSING_PARAMETERS_TEXT, strategyParameterRows } from '../../utils/strategy-parameters';
+import { SIMULATION_ASSUMPTIONS, hadOpenPositionAtEnd } from '../../utils/simulation-model';
+import { BacktestResponse } from '../../models';
 
 @Component({
   selector: 'app-result-cards',
@@ -7,7 +10,18 @@ import { Component, Input } from '@angular/core';
   styleUrl: './result-cards.css'
 })
 export class ResultCardsComponent {
-  @Input() result: any = null;
+  @Input() result: BacktestResponse | null = null;
+
+  readonly missingParametersText = MISSING_PARAMETERS_TEXT;
+  readonly assumptions = SIMULATION_ASSUMPTIONS;
+
+  get hadOpenPositionAtEnd() {
+    return hadOpenPositionAtEnd(this.result?.result);
+  }
+
+  get parameterRows() {
+    return strategyParameterRows(this.result?.parameters);
+  }
 
   formatStrategyName(strategyName: string) {
     if (strategyName === 'Moving Average Crossover') {

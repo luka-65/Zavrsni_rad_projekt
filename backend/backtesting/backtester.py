@@ -1,4 +1,10 @@
+from utils.validation import finite_number, require_market_rows
+
+
 def run_backtest(df, initial_balance=10000):
+
+    initial_balance = finite_number(initial_balance, "initial_balance", positive=True)
+    require_market_rows(df, 1)
 
     balance = initial_balance
     position = 0
@@ -51,9 +57,9 @@ def run_backtest(df, initial_balance=10000):
 
         equity_curve.append(current_equity)
 
-    open_position = position > 0
+    had_open_position_at_end = position > 0
 
-    if open_position:
+    if had_open_position_at_end:
         final_price = df.iloc[-1]["close"]
         balance = position * final_price
         profit_pct = ((final_price - buy_price) / buy_price) * 100
@@ -82,7 +88,7 @@ def run_backtest(df, initial_balance=10000):
         "max_drawdown_pct": round(max_drawdown, 2),
         "win_rate_pct": round(win_rate, 2),
         "number_of_trades": len([t for t in trades if t["type"] == "SELL"]),
-        "open_position": bool(open_position),
+        "had_open_position_at_end": bool(had_open_position_at_end),
         "trades": trades
     }
 

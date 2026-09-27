@@ -98,3 +98,23 @@ canvas {
     max-width: none;
   }
 }
+
+.comparison-note {
+  width: min(100%, 1180px);
+  margin: 8px auto 0;
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+td.parameters {
+  font-size: 13px;
+  color: #cbd5e1;
+}
+
+.best-card small {
+  display: block;
+  margin-top: 10px;
+  color: #cbd5e1;
+  font-size: 13px;
+  line-height: 1.5;
+}

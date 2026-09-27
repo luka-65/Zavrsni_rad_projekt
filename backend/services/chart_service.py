@@ -1,3 +1,4 @@
+from utils.validation import validate_strategy, require_market_rows, finite_number
 from services.binance_service import get_dataframe
 from strategies.moving_average import moving_average_strategy
 from strategies.rsi import rsi_strategy
@@ -14,7 +15,12 @@ def get_moving_average_chart(
     start_date=None,
     end_date=None
 ):
+    params = validate_strategy("moving-average", {
+        "short_window": short_window, "long_window": long_window,
+    })
+    short_window, long_window = params["short_window"], params["long_window"]
     df = get_dataframe(symbol, interval, limit, True, start_date, end_date)
+    require_market_rows(df, long_window)
     df = moving_average_strategy(df, short_window, long_window)
 
     buy_signals = []
@@ -44,7 +50,12 @@ def get_rsi_chart(
     start_date=None,
     end_date=None
 ):
+    params = validate_strategy("rsi", {
+        "period": period, "oversold": oversold, "overbought": overbought,
+    })
+    period, oversold, overbought = params["period"], params["oversold"], params["overbought"]
     df = get_dataframe(symbol, interval, limit, True, start_date, end_date)
+    require_market_rows(df, period + 1)
     df = rsi_strategy(df, period, oversold, overbought)
 
     return {
@@ -64,7 +75,12 @@ def get_bollinger_chart(
     start_date=None,
     end_date=None
 ):
+    params = validate_strategy("bollinger", {
+        "window": window, "num_std": num_std,
+    })
+    window, num_std = params["window"], params["num_std"]
     df = get_dataframe(symbol, interval, limit, True, start_date, end_date)
+    require_market_rows(df, window)
     df = bollinger_bands_strategy(df, window, num_std)
 
     return {

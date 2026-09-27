@@ -1,4 +1,5 @@
 import { Component, Input } from '@angular/core';
+import { DashboardStats } from '../../models';
 
 @Component({
   selector: 'app-dashboard-stats',
@@ -7,7 +8,7 @@ import { Component, Input } from '@angular/core';
   styleUrl: './dashboard-stats.css'
 })
 export class DashboardStatsComponent {
-  @Input() dashboardStats: any = null;
+  @Input() dashboardStats: DashboardStats | null = null;
 
   formatStrategyName(strategyName: string) {
     if (strategyName === 'Moving Average Crossover') {

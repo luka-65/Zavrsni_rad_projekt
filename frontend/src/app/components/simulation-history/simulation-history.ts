@@ -1,4 +1,11 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import {
+  MISSING_PARAMETERS_TEXT,
+  formatStrategyParameters,
+  strategyParameterRows
+} from '../../utils/strategy-parameters';
+import { Simulation } from '../../models';
+
 @Component({
   selector: 'app-simulation-history',
   imports: [],
@@ -6,15 +13,19 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
   styleUrl: './simulation-history.css'
 })
 export class SimulationHistoryComponent {
-  @Input() simulations: any[] = [];
+  @Input() simulations: Simulation[] = [];
   @Output() selectSimulationEvent = new EventEmitter<number>();
   @Output() deleteSimulationEvent = new EventEmitter<number>();
+
+  readonly missingParametersText = MISSING_PARAMETERS_TEXT;
+  readonly parameterRows = strategyParameterRows;
 
   exportCsv() {
     const headers = [
       'ID',
       'Datum',
       'Strategija',
+      'Parametri strategije',
       'Simbol',
       'Interval',
       'Razdoblje od',
@@ -31,6 +42,7 @@ export class SimulationHistoryComponent {
       simulation.id,
       simulation.created_at,
       this.formatStrategyName(simulation.strategy),
+      formatStrategyParameters(simulation.parameters),
       simulation.symbol,
       simulation.interval,
       simulation.start_date,
@@ -58,7 +70,7 @@ export class SimulationHistoryComponent {
     URL.revokeObjectURL(url);
   }
 
-  private escapeCsvValue(value: any) {
+  private escapeCsvValue(value: string | number | null | undefined) {
     if (value === null || value === undefined) {
       return '';
     }

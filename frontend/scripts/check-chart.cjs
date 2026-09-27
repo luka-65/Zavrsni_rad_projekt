@@ -1,4 +1,3 @@
-// PLAYWRIGHT_MODULE can point to a separate installation of the browser test tool.
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const assert = require('node:assert/strict');
 const path = require('node:path');
@@ -20,7 +19,8 @@ let legacyRequests = 0;
 let failLegacy = false;
 
 (async () => {
-  const browser = await chromium.launch({ channel: 'msedge', headless: true });
+  const headed = process.env.E2E_HEADED === '1';
+  const browser = await chromium.launch({ channel: 'msedge', headless: !headed, slowMo: headed ? 350 : 0 });
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
     const errors = [];
@@ -145,6 +145,9 @@ let failLegacy = false;
     await page.getByRole('button', { name: 'Pokušaj ponovno' }).click();
     await page.waitForFunction(() => !document.querySelector('button[aria-label="Približi"]')?.disabled);
     assert.deepEqual(errors, []);
-    console.log('PASS: zoom, wheel, pan, markers, transaction navigation, tab remount, all strategies, empty/legacy/error states, desktop/mobile canvas and text contrast.');
-  } finally { await browser.close(); }
+    console.log('PROLAZ: zumiranje (gumbi i kotačić), pomicanje, oznake i navigacija transakcija, ponovno otvaranje kartice, sve tri strategije, prazno/starije/pogreška stanje, prikaz na računalu i mobitelu te kontrast teksta.');
+  } finally {
+    if (headed) await new Promise(resolve => setTimeout(resolve, 3000));
+    await browser.close();
+  }
 })().catch(error => { console.error(error); process.exitCode = 1; });

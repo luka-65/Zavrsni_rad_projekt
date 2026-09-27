@@ -39,9 +39,33 @@
       <p>{{ result.result.number_of_trades }}</p>
     </div>
 
-    <div class="card">
-      <h3>Otvorena pozicija</h3>
-      <p>{{ result.result.open_position ? 'Da' : 'Ne' }}</p>
+    <div class="card open-position-card">
+      <h3>Pozicija otvorena na kraju razdoblja</h3>
+      <p>{{ hadOpenPositionAtEnd ? 'Da' : 'Ne' }}</p>
+      @if (hadOpenPositionAtEnd) {
+        <small>Zatvorena po posljednjoj dostupnoj cijeni radi izračuna konačne vrijednosti.</small>
+      }
     </div>
+
+    <div class="card parameters-card">
+      <h3>Parametri strategije</h3>
+      <ul class="parameters">
+        <li>Početni kapital: <strong>{{ result.result.initial_balance }} USDT</strong></li>
+        @for (row of parameterRows; track row[0]) {
+          <li>{{ row[0] }}: <strong>{{ row[1] }}</strong></li>
+        } @empty {
+          <li class="missing">{{ missingParametersText }}</li>
+        }
+      </ul>
+    </div>
+  </div>
+
+  <div class="assumptions">
+    <h3>Pretpostavke simulacije</h3>
+    <ul>
+      @for (assumption of assumptions; track $index) {
+        <li>{{ assumption }}</li>
+      }
+    </ul>
   </div>
 }

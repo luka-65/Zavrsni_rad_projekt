@@ -1,4 +1,6 @@
 import { Component, Input } from '@angular/core';
+import { formatStrategyParameters } from '../../utils/strategy-parameters';
+import { StrategyComparisonResult } from '../../models';
 
 @Component({
   selector: 'app-strategy-comparison',
@@ -7,8 +9,10 @@ import { Component, Input } from '@angular/core';
   styleUrl: './strategy-comparison.css'
 })
 export class StrategyComparisonComponent {
-  @Input() compareResults: any[] = [];
-  @Input() bestStrategy: any = null;
+  @Input() compareResults: StrategyComparisonResult[] = [];
+  @Input() bestStrategy: StrategyComparisonResult | null = null;
+
+  readonly formatParameters = formatStrategyParameters;
 
   formatStrategyName(strategyName: string) {
     if (strategyName === 'Moving Average Crossover') {

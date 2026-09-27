@@ -1,10 +1,52 @@
 import os
+import time
 import requests
 import pandas as pd
 from datetime import datetime, timedelta, timezone
+from utils.errors import ExternalServiceError
+from utils.validation import ValidationError, validate_market_inputs
 
 BINANCE_KLINES_URL = "https://api.binance.com/api/v3/klines"
 DATA_DIR = "data"
+MAX_KLINES_PER_REQUEST = 1000
+
+REQUEST_TIMEOUT = 10
+
+CACHE_TTL_SECONDS = 300
+
+
+def binance_get(url, params=None):
+    try:
+        response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
+    except requests.Timeout:
+        raise ExternalServiceError(
+            "Binance nije odgovorio na vrijeme. Pokušajte ponovno za nekoliko trenutaka.", 504
+        ) from None
+    except requests.RequestException:
+        raise ExternalServiceError(
+            "Binanceu se trenutačno ne može pristupiti. Provjerite internetsku vezu i pokušajte ponovno."
+        ) from None
+
+    check_market_response(response)
+
+    try:
+        return response.json()
+    except ValueError:
+        raise ExternalServiceError("Binance je vratio neispravan odgovor.") from None
+
+
+def check_market_response(response):
+    if response.status_code == 400:
+        try:
+            payload = response.json()
+        except ValueError:
+            payload = {}
+        if isinstance(payload, dict) and payload.get("code") == -1121:
+            raise ValidationError("Odabrani trgovački simbol ne postoji na Binanceu.")
+    if response.status_code in (418, 429):
+        raise ExternalServiceError("Binance je privremeno ograničio broj zahtjeva. Pokušajte ponovno za minutu.")
+    if response.status_code >= 400:
+        raise ExternalServiceError(f"Binance je vratio pogrešku (HTTP {response.status_code}).")
 
 
 def get_cache_file_path(symbol, interval, limit, start_date=None, end_date=None):
@@ -27,6 +69,10 @@ def date_to_milliseconds(date_value, end_of_day=False):
     return int(date_time.timestamp() * 1000)
 
 
+def now_milliseconds():
+    return int(time.time() * 1000)
+
+
 def format_kline(item):
     return {
         "open_time": item[0],
@@ -39,6 +85,71 @@ def format_kline(item):
     }
 
 
+def keep_complete_candles(rows, start_time=None, end_time=None, now=None):
+    now = now_milliseconds() if now is None else now
+    return [
+        row for row in rows
+        if row["close_time"] < now
+        and (start_time is None or row["open_time"] >= start_time)
+        and (end_time is None or row["close_time"] <= end_time)
+    ]
+
+
+def read_cache(cache_file, end_time=None):
+    if not os.path.exists(cache_file):
+        return None
+
+    saved_at = int(os.path.getmtime(cache_file) * 1000)
+    period_was_over = end_time is not None and saved_at > end_time
+
+    if not period_was_over and now_milliseconds() - saved_at > CACHE_TTL_SECONDS * 1000:
+        return None
+
+    try:
+        return pd.read_csv(cache_file).to_dict(orient="records")
+    except pd.errors.EmptyDataError:
+        return None
+
+
+def write_cache(cache_file, rows):
+    if rows:
+        pd.DataFrame(rows).to_csv(cache_file, index=False)
+
+
+def fetch_period(symbol, interval, start_time, end_time):
+    formatted_data = []
+    current_start_time = start_time
+
+    while current_start_time <= end_time:
+        raw_data = binance_get(BINANCE_KLINES_URL, {
+            "symbol": symbol,
+            "interval": interval,
+            "limit": MAX_KLINES_PER_REQUEST,
+            "startTime": current_start_time,
+            "endTime": end_time
+        })
+
+        if not raw_data:
+            break
+
+        formatted_data.extend(format_kline(item) for item in raw_data)
+        current_start_time = raw_data[-1][6] + 1
+
+        if len(raw_data) < MAX_KLINES_PER_REQUEST:
+            break
+
+    return formatted_data
+
+
+def fetch_latest(symbol, interval, limit):
+    raw_data = binance_get(BINANCE_KLINES_URL, {
+        "symbol": symbol,
+        "interval": interval,
+        "limit": min(limit + 1, MAX_KLINES_PER_REQUEST)
+    })
+    return [format_kline(item) for item in raw_data]
+
+
 def get_market_data(
     symbol="BTCUSDT",
     interval="1d",
@@ -48,70 +159,32 @@ def get_market_data(
     end_date=None
 ):
 
+    common = validate_market_inputs(symbol, interval, limit, start_date, end_date)
+    limit = common["limit"]
     os.makedirs(DATA_DIR, exist_ok=True)
 
     cache_file = get_cache_file_path(symbol, interval, limit, start_date, end_date)
 
-    if use_cache and os.path.exists(cache_file):
-        df = pd.read_csv(cache_file)
-        return df.to_dict(orient="records")
-
     if start_date and end_date:
         start_time = date_to_milliseconds(start_date)
         end_time = date_to_milliseconds(end_date, end_of_day=True)
-        formatted_data = []
-        current_start_time = start_time
+    else:
+        start_time = end_time = None
 
-        while current_start_time <= end_time:
-            params = {
-                "symbol": symbol,
-                "interval": interval,
-                "limit": 1000,
-                "startTime": current_start_time,
-                "endTime": end_time
-            }
+    rows = read_cache(cache_file, end_time) if use_cache else None
 
-            response = requests.get(BINANCE_KLINES_URL, params=params)
-            response.raise_for_status()
+    if rows is None:
+        if start_time is not None:
+            rows = fetch_period(symbol, interval, start_time, end_time)
+        else:
+            rows = fetch_latest(symbol, interval, limit)
 
-            raw_data = response.json()
+        rows = keep_complete_candles(rows, start_time, end_time)
+        write_cache(cache_file, rows)
 
-            if not raw_data:
-                break
+    rows = keep_complete_candles(rows, start_time, end_time)
 
-            formatted_data.extend(format_kline(item) for item in raw_data)
-
-            last_close_time = raw_data[-1][6]
-            current_start_time = last_close_time + 1
-
-            if len(raw_data) < 1000:
-                break
-
-        df = pd.DataFrame(formatted_data)
-        df.to_csv(cache_file, index=False)
-
-        return formatted_data
-
-    params = {
-        "symbol": symbol,
-        "interval": interval,
-        "limit": limit
-    }
-
-    response = requests.get(BINANCE_KLINES_URL, params=params)
-    response.raise_for_status()
-
-    raw_data = response.json()
-
-    formatted_data = []
-
-    for item in raw_data:
-        formatted_data.append(format_kline(item))
-
-    df = pd.DataFrame(formatted_data)
-    df.to_csv(cache_file, index=False)
-
-    return formatted_data
+    return rows if start_time is not None else rows[-limit:]
 
 
 def get_dataframe(

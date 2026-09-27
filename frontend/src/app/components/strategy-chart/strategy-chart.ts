@@ -5,20 +5,8 @@ import { Subscription } from 'rxjs';
 import { LucideAngularModule, ZoomIn, ZoomOut, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-angular';
 import { ChartDataService } from '../../services/chart.service';
 import type {} from 'chartjs-plugin-zoom';
+import { BacktestResponse, ChartData, Trade } from '../../models';
 
-interface ChartData {
-  timestamps: number[];
-  prices: number[];
-  [key: string]: (number | null)[];
-}
-interface Trade {
-  type: string;
-  price: number;
-  timestamp?: number;
-  candle_index?: number;
-  profit_pct: number | null;
-  is_final_close?: boolean;
-}
 interface PlotPoint { x: number; y: number | null; tradeIndex?: number; }
 
 @Component({
@@ -29,7 +17,7 @@ interface PlotPoint { x: number; y: number | null; tradeIndex?: number; }
 })
 export class StrategyChartComponent implements OnChanges, OnDestroy {
   @Input() strategy = '';
-  @Input() result: any = null;
+  @Input() result: BacktestResponse | null = null;
   @ViewChild('canvas') canvas!: ElementRef<HTMLCanvasElement>;
   readonly icons = { ZoomIn, ZoomOut, RotateCcw, ChevronLeft, ChevronRight };
   readonly loading = signal(true);
@@ -79,11 +67,17 @@ export class StrategyChartComponent implements OnChanges, OnDestroy {
       void this.render(snapshot, generation);
       return;
     }
-    const params = new URLSearchParams();
-    for (const name of ['start_date', 'end_date', 'short_window', 'long_window', 'period', 'oversold', 'overbought', 'window', 'num_std']) {
-      if (this.result?.[name] != null) params.set(name, String(this.result[name]));
+    const result = this.result;
+    if (!result) {
+      this.loading.set(false);
+      return;
     }
-    this.request = this.chartService.getChartData(this.strategy, this.result.symbol, this.result.interval, '&' + params).subscribe({
+    const params = new URLSearchParams();
+    const source: Record<string, unknown> = { ...result, ...result.parameters };
+    for (const name of ['start_date', 'end_date', 'short_window', 'long_window', 'period', 'oversold', 'overbought', 'window', 'num_std']) {
+      if (source[name] != null) params.set(name, String(source[name]));
+    }
+    this.request = this.chartService.getChartData(this.strategy, result.symbol, result.interval, '&' + params).subscribe({
       next: data => { void this.render(data, generation); },
       error: () => {
         this.loading.set(false);

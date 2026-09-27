@@ -3,7 +3,7 @@
 <div class="best-backtest-card">
 
   <div class="header">
-    🏆 Najbolje testiranje
+    Simulacija s najvećim zabilježenim povratom
   </div>
 
   <div class="content">
@@ -16,6 +16,11 @@
     <div>
       <span>Simbol</span>
       <h3>{{ bestBacktest.symbol }}</h3>
+    </div>
+
+    <div>
+      <span>Interval i razdoblje</span>
+      <h4>{{ bestBacktest.interval }}, {{ bestBacktest.start_date || '-' }} – {{ bestBacktest.end_date || '-' }}</h4>
     </div>
 
     <div>
@@ -33,6 +38,8 @@
     </div>
 
   </div>
+
+  <p class="parameters">Parametri: {{ formatParameters(bestBacktest.parameters) }}</p>
 
 </div>
 

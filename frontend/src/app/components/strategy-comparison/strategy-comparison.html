@@ -1,10 +1,16 @@
 @if (compareResults.length > 0) {
   <h2>Usporedba strategija</h2>
 
+  <p class="comparison-note">
+    Usporedba uvijek koristi iste referentne konfiguracije strategija (MA 20/50, RSI 14/30/70,
+    Bollinger 20/2), a ne parametre iz obrasca, kako bi se strategije usporedile pod jednakim uvjetima.
+  </p>
+
   <table>
     <thead>
       <tr>
         <th>Strategija</th>
+        <th>Parametri</th>
         <th>Povrat</th>
         <th>Završni kapital</th>
         <th>Najveći pad</th>
@@ -17,6 +23,7 @@
       @for (item of compareResults; track item.strategy) {
         <tr>
           <td>{{ formatStrategyName(item.strategy) }}</td>
+          <td class="parameters">{{ formatParameters(item.parameters) }}</td>
           <td [style.color]="item.return_pct >= 0 ? '#22c55e' : '#ef4444'">
             {{ item.return_pct }}%
           </td>
@@ -35,10 +42,14 @@
 
 @if (bestStrategy) {
   <div class="best-card">
-    <h2>🏆 Najbolja strategija</h2>
+    <h2>Najveći povrat u ovoj usporedbi</h2>
     <p>{{ formatStrategyName(bestStrategy.strategy) }}</p>
     <span [style.color]="bestStrategy.return_pct >= 0 ? '#22c55e' : '#ef4444'">
       Povrat: {{ bestStrategy.return_pct }}%
     </span>
+    <small>
+      Vrijedi samo za odabrani par, interval, razdoblje i referentne parametre. Ne uzima u obzir
+      najveći pad, broj transakcija ni stabilnost rezultata, pa ne znači da je strategija općenito bolja.
+    </small>
   </div>
 }

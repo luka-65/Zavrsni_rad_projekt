@@ -2,7 +2,6 @@ import math
 
 
 def build_chart_data(df):
-    """Keep the chart and execution history tied to the same market snapshot."""
     time_column = "close_time" if "close_time" in df else "open_time"
     data = {
         "timestamps": [int(value) for value in df[time_column]] if time_column in df else [],

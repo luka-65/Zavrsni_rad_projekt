@@ -64,3 +64,9 @@
     gap: 18px;
   }
 }
+
+.parameters {
+  margin: 16px 0 0;
+  color: #cbd5e1;
+  font-size: 14px;
+}

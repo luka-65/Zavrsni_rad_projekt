@@ -1,11 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { API_URL } from '../api.config';
+import { ChartData } from '../models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ChartDataService {
-  private apiUrl = 'http://127.0.0.1:5000/api/chart';
+  private apiUrl = `${API_URL}/chart`;
 
   constructor(private http: HttpClient) {}
 
@@ -15,7 +17,7 @@ export class ChartDataService {
     interval: string,
     params: string
   ) {
-    return this.http.get<any>(
+    return this.http.get<ChartData>(
       `${this.apiUrl}/${endpoint}?symbol=${symbol}&interval=${interval}${params}`
     );
   }

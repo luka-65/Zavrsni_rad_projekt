@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { StrategyKey, SymbolSearchResult } from '../../models';
 
 @Component({
   selector: 'app-simulation-form',
@@ -11,9 +12,9 @@ export class SimulationFormComponent {
   today = new Date().toISOString().slice(0, 10);
 
   @Input() symbolSearch = '';
-  @Input() symbolResults: any[] = [];
+  @Input() symbolResults: SymbolSearchResult[] = [];
 
-  @Input() strategy = 'moving-average';
+  @Input() strategy: StrategyKey = 'moving-average';
   @Input() interval = '1d';
   @Input() initialBalance = 10000;
   @Input() startDate = '';
@@ -35,7 +36,7 @@ export class SimulationFormComponent {
   @Input() numStd = 2;
 
   @Output() symbolSearchChange = new EventEmitter<string>();
-  @Output() strategyChange = new EventEmitter<string>();
+  @Output() strategyChange = new EventEmitter<StrategyKey>();
   @Output() intervalChange = new EventEmitter<string>();
   @Output() initialBalanceChange = new EventEmitter<number>();
   @Output() startDateChange = new EventEmitter<string>();

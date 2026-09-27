@@ -135,6 +135,34 @@ Primjer korištenja aplikacije:
 10. Pregledati rezultate, graf, transakcije i metrike.
 11. Po potrebi izvesti rezultat u PDF izvještaj.
 
+## Automatsko testiranje
+
+Svi automatski testovi pokreću se jednom naredbom iz glavne mape projekta:
+
+backend\venv\Scripts\python run_tests.py
+
+Skripta redom pokreće backend testove (Python `unittest`), frontend testove (Angular + Vitest) i E2E test grafa (Playwright u pregledniku Edge) te sprema zajednički izvještaj u `test-results.txt`. E2E test sam pokreće i zaustavlja razvojni poslužitelj; bez njega se testovi pokreću naredbom `backend\venv\Scripts\python run_tests.py --bez-e2e`. Uz `--prikazi` E2E test otvara vidljivi prozor preglednika Edge i usporava radnje kako bi se tijek testa mogao pratiti.
+
+Backend testovi grupirani su u mapi `backend/tests`:
+
+- `test_strategies.py` – indikatori i signali za sve tri strategije,
+- `test_backtester.py` – model izvršenja transakcija i izračun metrika,
+- `test_api.py` – HTTP rute, statusni kodovi i validacija ulaza,
+- `test_market_data.py` – dohvat s Binancea, granice razdoblja i cache,
+- `test_persistence.py` – spremanje u SQLite, parametri i povijest simulacija.
+
+Testovi ne koriste stvarnu bazu simulacija ni mrežu: tržišni podaci i odgovori Binancea zadani su u samim testovima, a baza je privremena.
+
+Pojedini dijelovi mogu se pokrenuti i zasebno:
+
+cd backend
+venv\Scripts\python -X utf8 -m unittest discover -s tests -v
+
+cd frontend
+npm test
+npm run test:e2e
+npm run test:e2e:prikaz
+
 ## Autor
 
 Luka Šarlija

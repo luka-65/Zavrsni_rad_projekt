@@ -16,6 +16,7 @@
       <tr>
         <th>Datum</th>
         <th>Strategija</th>
+        <th>Parametri</th>
         <th>Simbol</th>
         <th>Interval</th>
         <th>Razdoblje</th>
@@ -32,6 +33,13 @@
         <tr>
   <td>{{ simulation.created_at }}</td>
   <td>{{ formatStrategyName(simulation.strategy) }}</td>
+  <td class="parameters">
+    @for (row of parameterRows(simulation.parameters); track row[0]) {
+      <div>{{ row[0] }}: <strong>{{ row[1] }}</strong></div>
+    } @empty {
+      <span class="missing">{{ missingParametersText }}</span>
+    }
+  </td>
   <td>{{ simulation.symbol }}</td>
   <td>{{ simulation.interval }}</td>
   <td>{{ simulation.start_date || '-' }} - {{ simulation.end_date || '-' }}</td>

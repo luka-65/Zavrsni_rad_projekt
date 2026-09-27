@@ -8,7 +8,6 @@ def bollinger_bands_strategy(df, window=20, num_std=2):
     df["UPPER_BAND"] = df["MA"] + (num_std * df["STD"])
     df["LOWER_BAND"] = df["MA"] - (num_std * df["STD"])
 
-    # Missing signals preserve the previous state; zero explicitly closes it.
     df["signal"] = float("nan")
 
     df.loc[df["close"] < df["LOWER_BAND"], "signal"] = 1

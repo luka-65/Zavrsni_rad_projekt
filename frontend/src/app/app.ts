@@ -2,6 +2,7 @@ import { FormsModule } from '@angular/forms';
 import { Chart } from 'chart.js/auto';
 import { Component, OnInit, ChangeDetectorRef, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 
 import { BacktestService } from './services/backtest.service';
 import { SimulationService } from './services/simulation.service';
@@ -15,6 +16,16 @@ import { SimulationHistoryComponent } from './components/simulation-history/simu
 import { SimulationFormComponent } from './components/simulation-form/simulation-form';
 import { DashboardStatsComponent } from './components/dashboard-stats/dashboard-stats';
 import { BestBacktestComponent } from './components/best-backtest/best-backtest';
+import {
+  BacktestRequest,
+  BacktestResponse,
+  DashboardStats,
+  Simulation,
+  StrategyComparisonResult,
+  StrategyKey,
+  StrategyParameters,
+  SymbolSearchResult
+} from './models';
 import { finalize } from 'rxjs';
 
 
@@ -30,21 +41,21 @@ BestBacktestComponent],
   styleUrl: './app.css'
 })
 export class App implements OnInit {
-  result: any = null;
-  dashboardChart: any = null;
-  simulations: any[] = [];
+  result: BacktestResponse | null = null;
+  dashboardChart: Chart<'line'> | null = null;
+  simulations: Simulation[] = [];
 
-  compareResults: any[] = [];
-  compareChart: any = null;
-  bestStrategy: any = null;
-  dashboardStats: any = null;
-  bestBacktest: any = null;
+  compareResults: StrategyComparisonResult[] = [];
+  compareChart: Chart<'bar'> | null = null;
+  bestStrategy: StrategyComparisonResult | null = null;
+  dashboardStats: DashboardStats | null = null;
+  bestBacktest: Simulation | null = null;
 
   symbolSearch = '';
-  symbolResults: any[] = [];
+  symbolResults: SymbolSearchResult[] = [];
 
   symbol = '';
-  strategy = 'moving-average';
+  strategy: StrategyKey = 'moving-average';
   interval = '1d';
   initialBalance = 10000;
   startDate = '';
@@ -85,7 +96,7 @@ export class App implements OnInit {
     localStorage.removeItem('lastResult');
     localStorage.removeItem('activeTab');
 
-    if (savedStrategy) {
+    if (savedStrategy === 'moving-average' || savedStrategy === 'rsi' || savedStrategy === 'bollinger') {
       this.strategy = savedStrategy;
     }
 
@@ -118,42 +129,33 @@ setActiveTab(tab: string) {
   }
 }
 
-  getStrategyEndpoint() {
+  getStrategyParameters(): StrategyParameters {
     if (this.strategy === 'rsi') {
-      return 'rsi';
+      return { period: this.rsiPeriod, oversold: this.oversold, overbought: this.overbought };
     }
 
     if (this.strategy === 'bollinger') {
-      return 'bollinger';
+      return { window: this.bollingerWindow, num_std: this.numStd };
     }
 
-    return 'moving-average';
+    return { short_window: this.shortWindow, long_window: this.longWindow };
   }
 
-  getStrategyParams() {
-    const dateParams = this.getDateParams();
+  buildBacktestRequest(): BacktestRequest {
+    const request: BacktestRequest = {
+      strategy: this.strategy,
+      symbol: this.symbol,
+      interval: this.interval,
+      initial_balance: this.initialBalance,
+      parameters: this.getStrategyParameters()
+    };
 
-    if (this.strategy === 'moving-average') {
-      return `&short_window=${this.shortWindow}&long_window=${this.longWindow}${dateParams}`;
+    if (this.startDate && this.endDate) {
+      request.start_date = this.startDate;
+      request.end_date = this.endDate;
     }
 
-    if (this.strategy === 'rsi') {
-      return `&period=${this.rsiPeriod}&oversold=${this.oversold}&overbought=${this.overbought}${dateParams}`;
-    }
-
-    if (this.strategy === 'bollinger') {
-      return `&window=${this.bollingerWindow}&num_std=${this.numStd}${dateParams}`;
-    }
-
-    return dateParams;
-  }
-
-  getDateParams() {
-    if (!this.startDate || !this.endDate) {
-      return '';
-    }
-
-    return `&start_date=${this.startDate}&end_date=${this.endDate}`;
+    return request;
   }
 
   runBacktest() {
@@ -168,17 +170,8 @@ setActiveTab(tab: string) {
 
   this.isLoading = true;
 
-  const endpoint = this.getStrategyEndpoint();
-  const params = this.getStrategyParams();
-
   this.backtestService
-    .runBacktest(
-      endpoint,
-      this.symbol,
-      this.interval,
-      this.initialBalance,
-      params
-    )
+    .runBacktest(this.buildBacktestRequest())
     .pipe(
       finalize(() => {
         this.isLoading = false;
@@ -201,9 +194,9 @@ setActiveTab(tab: string) {
         this.cdr.detectChanges();
 
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         console.error(error);
-        alert('Došlo je do greške pri pokretanju simulacije.');
+        alert(error?.error?.message || 'Došlo je do greške pri pokretanju simulacije.');
       }
     });
 }
@@ -223,17 +216,23 @@ setActiveTab(tab: string) {
         this.startDate,
         this.endDate
       )
-      .subscribe((response) => {
-        this.compareResults = response.results;
-        this.bestStrategy = this.compareResults.reduce((best, current) =>
-          current.return_pct > best.return_pct ? current : best
-        );
+      .subscribe({
+        next: (response) => {
+          this.compareResults = response.results;
+          this.bestStrategy = this.compareResults.reduce((best, current) =>
+            current.return_pct > best.return_pct ? current : best
+          );
 
-        this.activeTab = 'compare';
-        this.cdr.detectChanges();
-        setTimeout(() => {
-          this.loadCompareChart();
-        });
+          this.activeTab = 'compare';
+          this.cdr.detectChanges();
+          setTimeout(() => {
+            this.loadCompareChart();
+          });
+        },
+        error: (error: HttpErrorResponse) => {
+          console.error(error);
+          alert(error?.error?.message || 'Došlo je do greške pri usporedbi strategija.');
+        }
       });
   }
 
@@ -504,8 +503,14 @@ setActiveTab(tab: string) {
       return;
     }
 
-    this.symbolService.searchSymbols(this.symbolSearch).subscribe((response) => {
-      this.symbolResults = response.data;
+    this.symbolService.searchSymbols(this.symbolSearch).subscribe({
+      next: (response) => {
+        this.symbolResults = response.data;
+      },
+      error: (error: HttpErrorResponse) => {
+        console.error(error);
+        this.symbolResults = [];
+      }
     });
   }
 
@@ -640,20 +645,24 @@ setActiveTab(tab: string) {
       }
 
       this.result = {
-        status: 'success',
+        id: simulation.id,
         strategy: simulation.strategy,
         symbol: simulation.symbol,
         interval: simulation.interval,
         start_date: simulation.start_date,
         end_date: simulation.end_date,
+        parameters: simulation.parameters,
         result: simulation.result
       };
-    
+
       this.symbol = simulation.symbol;
+      this.symbolSearch = simulation.symbol;
       this.interval = simulation.interval;
       this.startDate = simulation.start_date || '';
       this.endDate = simulation.end_date || '';
       this.strategy = this.mapStrategyToFrontend(simulation.strategy);
+      this.initialBalance = simulation.initial_balance;
+      this.restoreStrategyParameters(simulation.parameters);
 
       this.activeTab = 'results';
       this.cdr.detectChanges();
@@ -690,7 +699,7 @@ deleteSimulation(id: number) {
           });
         }
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         console.error(error);
         this.simulations = previousSimulations;
         this.cdr.detectChanges();
@@ -699,7 +708,21 @@ deleteSimulation(id: number) {
     });
 }
 
-mapStrategyToFrontend(strategyName: string): string {
+restoreStrategyParameters(parameters: StrategyParameters | null) {
+  if (!parameters) {
+    return;
+  }
+
+  this.shortWindow = parameters['short_window'] ?? this.shortWindow;
+  this.longWindow = parameters['long_window'] ?? this.longWindow;
+  this.rsiPeriod = parameters['period'] ?? this.rsiPeriod;
+  this.oversold = parameters['oversold'] ?? this.oversold;
+  this.overbought = parameters['overbought'] ?? this.overbought;
+  this.bollingerWindow = parameters['window'] ?? this.bollingerWindow;
+  this.numStd = parameters['num_std'] ?? this.numStd;
+}
+
+mapStrategyToFrontend(strategyName: string): StrategyKey {
   if (strategyName === 'Moving Average Crossover') {
     return 'moving-average';
   }

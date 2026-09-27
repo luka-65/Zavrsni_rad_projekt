@@ -1,17 +1,19 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { API_URL } from '../api.config';
+import { ApiResponse, SymbolSearchResult } from '../models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SymbolService {
-  private apiUrl = 'http://127.0.0.1:5000/api/symbols/search';
+  private apiUrl = `${API_URL}/symbols/search`;
 
   constructor(private http: HttpClient) {}
 
   searchSymbols(query: string) {
-    return this.http.get<any>(
-      `${this.apiUrl}?query=${query}`
+    return this.http.get<ApiResponse<SymbolSearchResult[]>>(
+      this.apiUrl, { params: { query } }
     );
   }
 }

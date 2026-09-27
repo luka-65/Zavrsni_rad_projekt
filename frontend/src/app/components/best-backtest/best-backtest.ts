@@ -1,4 +1,6 @@
 import { Component, Input } from '@angular/core';
+import { formatStrategyParameters } from '../../utils/strategy-parameters';
+import { Simulation } from '../../models';
 
 @Component({
   selector: 'app-best-backtest',
@@ -7,7 +9,9 @@ import { Component, Input } from '@angular/core';
   styleUrl: './best-backtest.css'
 })
 export class BestBacktestComponent {
-  @Input() bestBacktest: any = null;
+  @Input() bestBacktest: Simulation | null = null;
+
+  readonly formatParameters = formatStrategyParameters;
 
   formatStrategyName(strategyName: string) {
     if (strategyName === 'Moving Average Crossover') {

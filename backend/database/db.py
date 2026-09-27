@@ -29,33 +29,16 @@ def init_db():
             result_json TEXT,
             start_date TEXT,
             end_date TEXT,
+            parameters_json TEXT,
             created_at TEXT NOT NULL
         )
     """)
 
-    try:
-        cursor.execute("""
-            ALTER TABLE simulations
-            ADD COLUMN result_json TEXT
-        """)
-    except sqlite3.OperationalError:
-        pass
-
-    try:
-        cursor.execute("""
-            ALTER TABLE simulations
-            ADD COLUMN start_date TEXT
-        """)
-    except sqlite3.OperationalError:
-        pass
-
-    try:
-        cursor.execute("""
-            ALTER TABLE simulations
-            ADD COLUMN end_date TEXT
-        """)
-    except sqlite3.OperationalError:
-        pass
+    for column in ("result_json", "start_date", "end_date", "parameters_json"):
+        try:
+            cursor.execute(f"ALTER TABLE simulations ADD COLUMN {column} TEXT")
+        except sqlite3.OperationalError:
+            pass
 
     conn.commit()
     conn.close()
@@ -63,7 +46,8 @@ def init_db():
     
 
 
-def save_simulation(strategy, symbol, interval, result, start_date=None, end_date=None):
+def save_simulation(strategy, symbol, interval, result, start_date=None, end_date=None,
+                    parameters=None):
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -84,9 +68,10 @@ def save_simulation(strategy, symbol, interval, result, start_date=None, end_dat
             result_json,
             start_date,
             end_date,
+            parameters_json,
             created_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         strategy,
         symbol,
@@ -100,11 +85,15 @@ def save_simulation(strategy, symbol, interval, result, start_date=None, end_dat
         json.dumps(result),
         start_date,
         end_date,
+        json.dumps(parameters) if parameters is not None else None,
         datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     ))
 
+    simulation_id = cursor.lastrowid
     conn.commit()
     conn.close()
+
+    return simulation_id
 
 
 def get_all_simulations():
@@ -115,15 +104,21 @@ def get_all_simulations():
     cursor.execute("""
         SELECT id, strategy, symbol, interval, initial_balance, final_balance,
                return_pct, max_drawdown_pct, win_rate_pct, number_of_trades,
-               start_date, end_date, created_at
+               start_date, end_date, parameters_json, created_at
         FROM simulations
-        ORDER BY created_at DESC
+        ORDER BY created_at DESC, id DESC
     """)
 
     rows = cursor.fetchall()
     conn.close()
 
-    return [dict(row) for row in rows]
+    return [with_parameters(dict(row)) for row in rows]
+
+
+def with_parameters(simulation):
+    parameters_json = simulation.pop("parameters_json", None)
+    simulation["parameters"] = json.loads(parameters_json) if parameters_json else None
+    return simulation
 
 def get_dashboard_stats():
     data = get_all_simulations()
@@ -191,7 +186,7 @@ def get_simulation_by_id(simulation_id):
     if row is None:
         return None
 
-    simulation = dict(row)
+    simulation = with_parameters(dict(row))
 
     if simulation.get("result_json"):
         simulation["result"] = json.loads(

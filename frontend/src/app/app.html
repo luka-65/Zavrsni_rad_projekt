@@ -73,9 +73,14 @@
     @if (averageRoiByStrategy.length > 0) {
       <section class="strategy-roi">
         <div class="section-header">
-          <h2>Prosječni povrat po strategiji</h2>
-          <span>Sve simulacije</span>
+          <h2>Prosječni povrat među spremljenim simulacijama</h2>
+          <span>Deskriptivni pregled povijesti</span>
         </div>
+
+        <p class="aggregate-note">
+          Simulacije se razlikuju po paru, intervalu, razdoblju i parametrima, pa ovaj prosjek
+          nije usporedba strategija pod jednakim uvjetima ni procjena njihove općenite uspješnosti.
+        </p>
 
         <div class="strategy-roi-list">
           @for (item of averageRoiByStrategy; track item.strategy) {
@@ -108,7 +113,7 @@
     @if (topSimulations.length > 0) {
       <section class="top-simulations">
         <div class="section-header">
-          <h2>Top 5 simulacija</h2>
+          <h2>5 simulacija s najvećim zabilježenim povratom</h2>
         </div>
 
         <table>
@@ -117,6 +122,7 @@
               <th>#</th>
               <th>Simbol</th>
               <th>Strategija</th>
+              <th>Interval</th>
               <th>Povrat</th>
             </tr>
           </thead>
@@ -136,6 +142,7 @@
                 </td>
                 <td>{{ simulation.symbol }}</td>
                 <td>{{ formatStrategyName(simulation.strategy) }}</td>
+                <td>{{ simulation.interval }}</td>
                 <td [style.color]="simulation.return_pct >= 0 ? '#22c55e' : '#ef4444'">
                   {{ simulation.return_pct }}%
                 </td>

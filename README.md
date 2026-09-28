@@ -91,7 +91,7 @@ Aplikacija uključuje sljedeće funkcionalnosti:
 
 Za pokretanje aplikacije potrebno je imati instalirano:
 
-- Python 3.12
+- Python 3.9
 - Node.js
 - npm
 - Git
@@ -104,7 +104,7 @@ Backend se nalazi u direktoriju `backend`.
 Na Windows računalu backend se pokreće sljedećim naredbama:
 
 cd backend
-py -3.12 -m venv venv
+py -3.9 -m venv venv
 .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 python app.py

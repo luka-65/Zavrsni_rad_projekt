@@ -20,7 +20,7 @@ let failLegacy = false;
 
 (async () => {
   const headed = process.env.E2E_HEADED === '1';
-  const browser = await chromium.launch({ channel: 'msedge', headless: !headed, slowMo: headed ? 350 : 0 });
+  const browser = await chromium.launch({ channel: 'chrome', headless: !headed, slowMo: headed ? 350 : 0 });
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
     const errors = [];
